@@ -79,7 +79,6 @@
         }
 
         /* --- Table and Status Buttons Styling --- */
-        /* MODIFIED: Sticky container for header elements on Page 2 */
         #sticky-top-container {
             position: -webkit-sticky;
             position: sticky;
@@ -206,25 +205,21 @@
                 <form id="infoForm" novalidate>
                     <fieldset id="courseInfoFieldset">
                          <h5 class="mb-3">ข้อมูลการสอน</h5>
+                         <!-- MODIFIED: Rearranged form elements -->
                          <div class="row g-3 align-items-end">
-                            <div class="col-md-4">
+                            <div class="col-md-6">
                                 <label for="teacherId" class="form-label">รหัสครูผู้สอน</label>
                                 <input type="text" class="form-control" id="teacherId" placeholder="กรอกรหัส 4 ตัวเพื่อค้นหา..." required maxlength="4">
                             </div>
-                            <div class="col-md-5">
+                            <div class="col-md-6">
+                                <label for="checkDate" class="form-label">วันที่เช็ค</label>
+                                <input type="text" class="form-control" id="checkDate" placeholder="กรุณาเลือกวันที่..." required>
+                            </div>
+                            <div class="col-12">
                                 <label for="sessionSelector" class="form-label">เลือกคาบสอนสำหรับวันนี้</label>
                                 <select class="form-select" id="sessionSelector" required disabled>
-                                    <option value="" selected>กรอกรหัสครูเพื่อดูรายการสอน</option>
+                                    <option value="" selected>กรอกรหัสครูและเลือกวันที่เพื่อดูรายการสอน</option>
                                 </select>
-                            </div>
-                             <div class="col-md-3">
-                                <label class="form-label">จำนวนชั่วโมง</label>
-                                <div class="btn-group d-flex" role="group">
-                                    <input type="radio" class="btn-check" name="hours" id="hours1" value="1" autocomplete="off" checked>
-                                    <label class="btn btn-outline-primary w-100" for="hours1">1</label>
-                                    <input type="radio" class="btn-check" name="hours" id="hours2" value="2" autocomplete="off">
-                                    <label class="btn btn-outline-primary w-100" for="hours2">2</label>
-                                </div>
                             </div>
                         </div>
 
@@ -240,24 +235,24 @@
                                 </div>
                             </div>
                             <div class="row g-3 mt-2">
-                                <div class="col-md-3 col-sm-12" style="display: none;">
-                                    <label for="checkDate" class="form-label">วันที่เช็ค</label>
-                                    <input type="text" class="form-control" id="checkDate" placeholder="กรุณาเลือกวันที่..." required>
-                                </div>
-                                 <div class="col-md-2 col-sm-6">
+                                 <div class="col-md-2 col-sm-6" style="display:none;">
                                     <label for="checkDay" class="form-label">วัน</label>
                                     <input type="text" class="form-control" id="checkDay" readonly disabled>
                                 </div>
                                 <div class="col-md-2 col-sm-6">
-                                    <label for="classPeriodDropdown" class="form-label">คาบที่สอน</label>
+                                    <label for="classPeriodDisplay" class="form-label">คาบที่สอน</label>
                                     <input type="text" class="form-control" id="classPeriodDisplay" placeholder="ข้อมูลอัตโนมัติ" readonly>
                                     <input type="hidden" id="classPeriod" required>
                                 </div>
-                                 <div class="col-md-2 col-sm-6">
+                                <div class="col-md-2 col-sm-6">
+                                    <label for="classHours" class="form-label">จำนวนชั่วโมง</label>
+                                    <input type="text" class="form-control" id="classHours" placeholder="ข้อมูลอัตโนมัติ" required readonly>
+                                </div>
+                                 <div class="col-md-4 col-sm-6">
                                     <label for="className" class="form-label">ชั้นเรียน</label>
                                     <input type="text" class="form-control" id="className" placeholder="ข้อมูลอัตโนมัติ" required readonly>
                                 </div>
-                                <div class="col-md-3 col-sm-6">
+                                <div class="col-md-4 col-sm-6">
                                     <label for="subjectName" class="form-label">ชื่อวิชา</label>
                                     <input type="text" class="form-control" id="subjectName" placeholder="ข้อมูลอัตโนมัติ" required readonly>
                                 </div>
@@ -364,6 +359,18 @@
             const canvas = document.getElementById('signature-pad');
             const loadingOverlay = $('#loadingOverlay');
 
+            // MODIFIED: Added public holidays for Thailand
+            const thaiHolidays = [
+                // 2024
+                "2024-01-01", "2024-02-26", "2024-04-08", "2024-04-15", "2024-04-16", "2024-05-01", 
+                "2024-05-06", "2024-05-22", "2024-06-03", "2024-07-22", "2024-07-29", "2024-08-12", 
+                "2024-10-14", "2024-10-23", "2024-12-05", "2024-12-10", "2024-12-31",
+                // 2025
+                "2025-01-01", "2025-02-12", "2025-03-03", "2025-04-07", "2025-04-14", "2025-04-15",
+                "2025-05-01", "2025-05-05", "2025-05-12", "2025-06-03", "2025-07-21", "2025-07-28", 
+                "2025-08-12", "2025-10-13", "2025-10-23", "2025-12-05", "2025-12-10", "2025-12-31"
+            ];
+
             const showLoadingOverlay = () => loadingOverlay.css('display', 'flex');
             const hideLoadingOverlay = () => loadingOverlay.hide();
 
@@ -372,11 +379,12 @@
                     const thaiDays = ["อาทิตย์", "จันทร์", "อังคาร", "พุธ", "พฤหัสบดี", "ศุกร์", "เสาร์"];
                     const dayIndex = selectedDates[0].getDay();
                     $('#checkDay').val(thaiDays[dayIndex]);
-                    populateSessionSelector(teacherSessionsData); 
+                    if ($('#teacherId').val().length === 4) {
+                       populateSessionSelector(teacherSessionsData); 
+                    }
                 }
             };
             
-            // MODIFIED: Function to adjust sticky header position
             function updateStickyHeader() {
                 const stickyContainer = document.getElementById('sticky-top-container');
                 if (stickyContainer && window.getComputedStyle(stickyContainer).display !== 'none') {
@@ -398,11 +406,18 @@
             }
             
             function initializeApp() {
+                // MODIFIED: Updated flatpickr config to disable weekends and holidays
                 datePicker = flatpickr("#checkDate", {
                     locale: "th",
                     dateFormat: "j M Y",
-                    maxDate: "today",
                     defaultDate: "today",
+                    disable: [
+                        function(date) {
+                            // disable weekends
+                            return (date.getDay() === 0 || date.getDay() === 6);
+                        },
+                        ...thaiHolidays
+                    ],
                     onChange: updateDayOfWeek,
                     onReady: updateDayOfWeek
                 });
@@ -445,7 +460,7 @@
             }
             
             function resetCourseDetails() {
-                $('#className, #subjectName, #classPeriod, #classPeriodDisplay').val('');
+                $('#className, #subjectName, #classPeriod, #classPeriodDisplay, #classHours').val('');
             }
 
 
@@ -454,7 +469,7 @@
                     $('#teacherDataContainer').slideUp();
                     $('#goToAttendancePage').hide();
                     $('#teacher-name, #learning-area').val('');
-                    $('#sessionSelector').prop('disabled', true).html('<option value="" selected>กรอกรหัสครูเพื่อดูรายการสอน</option>');
+                    $('#sessionSelector').prop('disabled', true).html('<option value="" selected>กรอกรหัสครูและเลือกวันที่เพื่อดูรายการสอน</option>');
                     teacherSessionsData = [];
                     return;
                 }
@@ -492,7 +507,7 @@
                         $('#teacherDataContainer').hide();
                         $('#goToAttendancePage').hide();
                         $('#teacher-name, #learning-area').val('');
-                        $('#sessionSelector').prop('disabled', true).html('<option value="" selected>กรอกรหัสครูเพื่อดูรายการสอน</option>');
+                        $('#sessionSelector').prop('disabled', true).html('<option value="" selected>กรอกรหัสครูและเลือกวันที่เพื่อดูรายการสอน</option>');
                         teacherSessionsData = [];
                     });
             }
@@ -515,7 +530,6 @@
                             $('#page1').hide();
                             $('#page2').show();
                             resizeCanvas();
-                            // MODIFIED: Update sticky header position after page is shown
                             updateStickyHeader();
                         } else {
                             const errorMessage = result.data.length === 0 ? `ไม่พบนักเรียนในชั้น '${className}'` : result.message;
@@ -569,7 +583,6 @@
             const toggleEditMode = (isEditing) => {
                 $('#courseInfoFieldset :input').not('#teacherId, #checkDate, #sessionSelector').prop('readonly', true);
                 $('#teacherId, #checkDate, #sessionSelector').prop('disabled', !isEditing);
-                isEditing ? datePicker.set('maxDate', "today") : datePicker.set('maxDate', datePicker.selectedDates[0] || "today");
                 
                 $('#page2').find('.btn-check').prop('disabled', !isEditing);
                 $('#statusControlButtons').toggle(isEditing);
@@ -609,6 +622,7 @@
                     const rowNode = $(this.node());
                     const studentName = rowNode.find('.student-name').text();
                     const status = rowNode.find('input.btn-check:checked').val();
+                    
                     attendanceData.push({ name: studentName, status: status });
 
                     if (status === 'มา') summary.present++;
@@ -637,9 +651,6 @@
                 showLoadingOverlay();
 
                 const selectedDate = datePicker.selectedDates[0];
-                // MODIFIED: Get the value of the selected hours radio button
-                const hours = $('input[name="hours"]:checked').val();
-
                 const courseInfo = {
                     teacherId: $('#teacherId').val(), teacherName: $('#teacher-name').val(), learningArea: $('#learning-area').val(),
                     date: $('#checkDate').val(), raw_date: selectedDate ? selectedDate.toISOString().split('T')[0] : '',
@@ -647,11 +658,11 @@
                     className: $('#className').val(), 
                     subjectName: $('#subjectName').val(),
                     period: $('#classPeriod').val(),
-                    hours: hours // Added hours field
+                    hours: $('#classHours').val()
                 };
                 const finalData = { 
                     courseInfo: courseInfo, 
-                    attendance: attendanceData, 
+                    attendance: attendanceData,
                     teacherSignature: signaturePad.toDataURL('image/png')
                 };
 
@@ -664,8 +675,16 @@
                 .then(result => {
                     hideLoadingOverlay();
                     if (result.status === 'success') {
-                        Swal.fire({ icon: 'success', title: 'สำเร็จ!', text: 'บันทึกข้อมูลเรียบร้อยแล้ว' });
-                        toggleEditMode(false);
+                        // MODIFIED: Reload page after successful save
+                        Swal.fire({ 
+                            icon: 'success', 
+                            title: 'สำเร็จ!', 
+                            text: 'บันทึกข้อมูลเรียบร้อยแล้ว',
+                            timer: 2000,
+                            showConfirmButton: false
+                        }).then(() => {
+                            window.location.reload();
+                        });
                     } else {
                         throw new Error(result.message);
                     }
@@ -685,7 +704,7 @@
                         if ($('#teacherDataContainer').is(':visible')) {
                             $('#teacherDataContainer').slideUp();
                             $('#goToAttendancePage').hide();
-                            $('#sessionSelector').prop('disabled', true).html('<option value="" selected>กรอกรหัสครูเพื่อดูรายการสอน</option>');
+                            $('#sessionSelector').prop('disabled', true).html('<option value="" selected>กรอกรหัสครูและเลือกวันที่เพื่อดูรายการสอน</option>');
                         }
                     }
                 });
@@ -706,6 +725,7 @@
                         $('#subjectName').val(session.subjectName);
                         $('#classPeriod').val(session.period);
                         $('#classPeriodDisplay').val(`คาบ ${session.period}`);
+                        $('#classHours').val(session.hours);
                     }
                 });
 
@@ -713,7 +733,7 @@
                     let form = document.getElementById('infoForm');
                     if (form.checkValidity() === false || $('#sessionSelector').val() === "") {
                          $('#sessionSelector').addClass('is-invalid');
-                        Swal.fire({ icon: 'warning', title: 'ข้อมูลไม่ครบถ้วน', text: 'กรุณากรอกรหัสครูและเลือกคาบสอนให้ถูกต้อง' });
+                        Swal.fire({ icon: 'warning', title: 'ข้อมูลไม่ครบถ้วน', text: 'กรุณากรอกข้อมูลให้ครบถ้วนก่อน' });
                         form.classList.add('was-validated');
                     } else {
                         $('#sessionSelector').removeClass('is-invalid');
@@ -749,7 +769,6 @@
                 $('#resetAllStatus').on('click', () => setAllStatuses('มา'));
                 $('#clear-signature').on('click', () => signaturePad.clear());
 
-                // MODIFIED: Add resize listener for sticky header
                 window.addEventListener("resize", () => {
                     resizeCanvas();
                     updateStickyHeader();
