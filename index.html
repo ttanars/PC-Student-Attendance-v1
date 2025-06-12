@@ -1,0 +1,687 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge, chrome=1" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PC|Student attendance v1</title> <link rel="shortcut icon" type="image/png" href="https://img2.pic.in.th/pic/Pakchong_School-removebg-preview.png">
+
+    <!-- Bootstrap 5 CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    
+    <!-- Flatpickr CSS for date picking -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
+
+    <!-- DataTables CSS for Bootstrap 5 to enhance tables -->
+    <link href="https://cdn.datatables.net/2.0.8/css/dataTables.bootstrap5.min.css" rel="stylesheet">
+    <link href="https://cdn.datatables.net/responsive/3.0.2/css/responsive.bootstrap5.min.css" rel="stylesheet">
+    
+    <!-- SweetAlert2 CSS for beautiful alerts -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.min.css">
+    
+    <!-- Google Fonts: Niramit for Thai typography -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Niramit:wght@400;700&display=swap" rel="stylesheet">
+
+    <style>
+        /* --- General Body and Layout Styling --- */
+        body {
+            background-color: #f0f2f5;
+            font-family: 'Niramit', sans-serif;
+        }
+        .container-fluid {
+            padding: 2rem;
+        }
+        .main-content {
+            background-color: #ffffff;
+            border-radius: 12px;
+            box-shadow: 0 6px 20px rgba(0,0,0,0.08);
+            padding: 2rem;
+        }
+        h2 {
+            font-weight: 700;
+            color: #343a40;
+        }
+        .btn-lg {
+            padding: 0.75rem 1.5rem;
+            font-size: 1.1rem;
+        }
+
+        /* --- Student Photo Styling --- */
+        .student-photo {
+            width: 50px;
+            height: 50px;
+            object-fit: cover;
+            border-radius: 50%;
+            border: 2px solid #e9ecef;
+            cursor: pointer;
+            transition: transform 0.2s ease-in-out, box-shadow 0.2s ease-in-out;
+        }
+        .student-photo:hover {
+            transform: scale(1.2);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+        }
+
+        /* --- Table and Status Buttons Styling --- */
+        #attendanceTable > thead {
+            background-color: #0d6efd;
+            color: white;
+        }
+        #attendanceTable > thead th {
+             background-color: transparent;
+             color: white;
+        }
+        .table-hover tbody tr:hover {
+            background-color: #e9f5ff;
+        }
+        .status-btn-group .btn {
+            padding: .25rem .5rem;
+            font-size: .8rem;
+        }
+
+        /* --- Form Elements Styling --- */
+        .form-control:disabled, .form-select:disabled, .form-check-input:disabled {
+            background-color: #e9ecef !important;
+            opacity: 0.7;
+        }
+        .form-control[readonly] {
+             background-color: #e9ecef;
+        }
+        .btn-check:disabled+.btn {
+            pointer-events: none;
+            filter: none;
+            opacity: 0.65;
+        }
+        #checkDate {
+            background-color: #fff;
+            cursor: pointer;
+        }
+        .dropdown-menu-scrollable {
+            max-height: 200px;
+            overflow-y: auto;
+        }
+        #classPeriodDropdown.is-invalid {
+            border-color: #dc3545;
+        }
+
+        /* --- Summary Boxes Styling --- */
+        .summary-box {
+            border: 1px solid #dee2e6;
+            border-radius: .375rem;
+            padding: 1rem;
+        }
+        .summary-box .count {
+            font-size: 1.75rem;
+            font-weight: 700;
+        }
+        .summary-box .label {
+            font-size: 0.9rem;
+            color: #6c757d;
+        }
+
+        /* --- Signature Pad Styling --- */
+        #signature-pad-container {
+            border: 2px dashed #ced4da;
+            border-radius: .375rem;
+            position: relative;
+        }
+        .signature-pad {
+            width: 100%;
+            height: 150px;
+        }
+        .signature-pad-clear {
+            position: absolute;
+            top: 5px;
+            right: 5px;
+        }
+        .signature-pad-container-disabled {
+             background-color: #e9ecef;
+             opacity: 0.7;
+        }
+
+        /* --- SweetAlert2 Custom Styling --- */
+        .swal2-title {
+            font-size: 1.25rem !important;
+        }
+        .swal2-html-container {
+            text-align: left;
+            margin-left: 1rem;
+        }
+        .swal2-html-container ul {
+            padding-left: 1.5rem;
+            margin-bottom: 0;
+        }
+        .swal2-html-container li {
+            margin-bottom: 0.25rem;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="container-fluid my-4">
+
+        <!-- =================================================================
+             PAGE 1: Course Information Input
+             This page collects data about the teacher, class, and subject.
+        ================================================================== -->
+        <div id="page1">
+            <div class="main-content">
+                <div class="text-center mb-4">
+                    <h2 class="display-6">ระบบบันทึกการเข้าเรียน</h2>
+                </div>
+                <form id="infoForm" novalidate>
+                    <fieldset id="courseInfoFieldset">
+                         <h5 class="mb-3">ข้อมูลการสอน</h5>
+                         <div class="row g-3">
+                            <div class="col-md-2 col-sm-6">
+                                <label for="teacherId" class="form-label">รหัสครูผู้สอน</label>
+                                <input type="text" class="form-control" id="teacherId" placeholder="กรอกรหัส" required>
+                            </div>
+                            <div class="col-md-4 col-sm-6">
+                                <label for="teacher-name" class="form-label">ชื่อ-สกุล ครูผู้สอน</label>
+                                <input type="text" class="form-control" id="teacher-name" placeholder="ข้อมูลอัตโนมัติ" required readonly>
+                            </div>
+                             <div class="col-md-6">
+                                <label for="learning-area" class="form-label">กลุ่มสาระฯ</label>
+                                <input type="text" class="form-control" id="learning-area" placeholder="ข้อมูลอัตโนมัติ" required readonly>
+                            </div>
+                        </div>
+                        <!-- MODIFIED: Added session selector -->
+                        <div class="row g-3 mt-2">
+                           <div class="col-12">
+                               <label for="sessionSelector" class="form-label">เลือกคาบสอนสำหรับวันนี้</label>
+                               <select class="form-select" id="sessionSelector" required disabled>
+                                   <option value="" selected>กรอกรหัสครูเพื่อดูรายการสอน</option>
+                               </select>
+                           </div>
+                        </div>
+                         <div class="row g-3 mt-2">
+                            <div class="col-md-3 col-sm-12">
+                                <label for="checkDate" class="form-label">วันที่เช็ค</label>
+                                <input type="text" class="form-control" id="checkDate" placeholder="กรุณาเลือกวันที่..." required>
+                            </div>
+                             <div class="col-md-2 col-sm-6">
+                                <label for="checkDay" class="form-label">วัน</label>
+                                <input type="text" class="form-control" id="checkDay" readonly disabled>
+                            </div>
+                            <div class="col-md-2 col-sm-6">
+                                <label for="classPeriodDropdown" class="form-label">คาบที่สอน</label>
+                                <!-- This will be populated automatically -->
+                                <input type="text" class="form-control" id="classPeriodDisplay" placeholder="ข้อมูลอัตโนมัติ" readonly>
+                                <input type="hidden" id="classPeriod" required>
+                            </div>
+                             <div class="col-md-2 col-sm-6">
+                                <label for="className" class="form-label">ชั้นเรียน</label>
+                                <input type="text" class="form-control" id="className" placeholder="ข้อมูลอัตโนมัติ" required readonly>
+                            </div>
+                            <div class="col-md-3 col-sm-6">
+                                <label for="subjectName" class="form-label">ชื่อวิชา</label>
+                                <input type="text" class="form-control" id="subjectName" placeholder="ข้อมูลอัตโนมัติ" required readonly>
+                            </div>
+                        </div>
+                    </fieldset>
+                    <div class="text-center mt-4">
+                        <button id="goToAttendancePage" type="button" class="btn btn-primary btn-lg">
+                            เช็คชื่อนักเรียน
+                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-arrow-right-circle-fill ms-2" viewBox="0 0 16 16"><path d="M8 0a8 8 0 1 1 0 16A8 8 0 0 1 8 0zM4.5 7.5a.5.5 0 0 0 0 1h5.793l-2.147 2.146a.5.5 0 0 0 .708.708l3-3a.5.5 0 0 0 0-.708l-3-3a.5.5 0 1 0-.708.708L10.293 7.5H4.5z"/></svg>
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <!-- =================================================================
+             PAGE 2: Student List & Attendance Taking
+        ================================================================== -->
+        <div id="page2" style="display: none;">
+             <div class="main-content">
+                <div class="text-center mb-4">
+                    <h2 class="display-6">บันทึกการเข้าเรียน</h2>
+                </div>
+                <!-- Controls to set all student statuses at once -->
+                <div class="d-flex justify-content-end align-items-center mb-3">
+                    <div id="statusControlButtons" class="btn-group flex-wrap" role="group">
+                        <button type="button" class="btn btn-sm btn-outline-success" id="setAllPresent">มาทั้งหมด</button>
+                        <button type="button" class="btn btn-sm btn-outline-info" id="setAllLeave">ลาทั้งหมด</button>
+                        <button type="button" class="btn btn-sm btn-outline-danger" id="setAllAbsent">ขาดทั้งหมด</button>
+                        <button type="button" class="btn btn-sm btn-outline-warning" id="setAllSkip">หนีทั้งหมด</button>
+                        <button type="button" class="btn btn-sm btn-outline-primary" id="setAllActivity">กก.ทั้งหมด</button>
+                        <button type="button" class="btn btn-sm btn-outline-secondary" id="resetAllStatus">รีเซต</button>
+                    </div>
+                </div>
+                <!-- Student attendance table -->
+                <table id="attendanceTable" class="table table-striped table-hover align-middle" style="width:100%">
+                    <thead>
+                        <tr>
+                            <th class="text-center">รูป</th>
+                            <th>ชื่อ - สกุล</th>
+                            <th class="text-center">สถานะ</th>
+                        </tr>
+                    </thead>
+                    <tbody><!-- Student rows will be populated by JavaScript --></tbody>
+                </table>
+                
+                <hr class="my-4">
+
+                <!-- Summary section -->
+                <h5 class="mb-3 text-center">สรุปผลการเข้าเรียน</h5>
+                <div id="summarySection" class="row g-3 text-center">
+                    <div class="col"><div class="summary-box"><div class="count" id="totalCount">0</div><div class="label">ทั้งหมด</div></div></div>
+                    <div class="col"><div class="summary-box"><div class="count text-success" id="presentCount">0</div><div class="label">มา</div></div></div>
+                    <div class="col"><div class="summary-box"><div class="count text-info" id="leaveCount">0</div><div class="label">ลา</div></div></div>
+                    <div class="col"><div class="summary-box"><div class="count text-danger" id="absentCount">0</div><div class="label">ขาด</div></div></div>
+                    <div class="col"><div class="summary-box"><div class="count text-warning" id="skipCount">0</div><div class="label">หนี</div></div></div>
+                    <div class="col"><div class="summary-box"><div class="count text-primary" id="activityCount">0</div><div class="label">กก.</div></div></div>
+                </div>
+                
+                <!-- Signature pad section -->
+                <div class="row mt-5">
+                    <div class="col-md-8 col-lg-6 mx-auto text-center">
+                        <p class="mb-2">ลงชื่อครูผู้สอน</p>
+                        <div id="signature-pad-container">
+                            <canvas id="signature-pad" class="signature-pad"></canvas>
+                            <button type="button" class="btn btn-outline-secondary btn-sm signature-pad-clear" id="clear-signature">รีเซ็ต</button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Action buttons section -->
+                <div class="text-center mt-4">
+                    <button id="backToInfoPage" class="btn btn-secondary btn-lg me-2">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-arrow-left-circle me-2" viewBox="0 0 16 16"><path fill-rule="evenodd" d="M1 8a7 7 0 1 0 14 0A7 7 0 0 0 1 8zm15 0A8 8 0 1 1 0 8a8 8 0 0 1 16 0zm-4.5-.5a.5.5 0 0 1 0 1H5.707l2.147 2.146a.5.5 0 0 1-.708.708l-3-3a.5.5 0 0 1 0-.708l3-3a.5.5 0 1 1 .708.708L5.707 7.5H11.5z"/></svg>
+                        กลับหน้าข้อมูล
+                    </button>
+                    <button id="editButton" class="btn btn-warning btn-lg me-2" style="display: none;">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-pencil-square me-2" viewBox="0 0 16 16"><path d="M15.502 1.94a.5.5 0 0 1 0 .706L14.459 3.69l-2-2L13.502.646a.5.5 0 0 1 .707 0l1.293 1.293zm-1.75 2.456-2-2L4.939 9.21a.5.5 0 0 0-.121.196l-.805 2.414a.25.25 0 0 0 .316.316l2.414-.805a.5.5 0 0 0 .196-.12l6.813-6.814z"/><path fill-rule="evenodd" d="M1 13.5A1.5 1.5 0 0 0 2.5 15h11a1.5 1.5 0 0 0 1.5-1.5v-6a.5.5 0 0 0-1 0v6a.5.5 0 0 1-.5.5h-11a.5.5 0 0 1-.5-.5v-11a.5.5 0 0 1 .5-.5H9a.5.5 0 0 0 0-1H2.5A1.5 1.5 0 0 0 1 2.5v11z"/></svg>
+                        แก้ไข
+                    </button>
+                    <button id="saveButton" class="btn btn-primary btn-lg me-2">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-check-circle-fill me-2" viewBox="0 0 16 16"><path d="M16 8A8 8 0 1 1 0 8a8 8 0 0 1 16 0zm-3.97-3.03a.75.75 0 0 0-1.08.022L7.477 9.417 5.384 7.323a.75.75 0 0 0-1.06 1.06L6.97 11.03a.75.75 0 0 0 1.079-.02l3.992-4.99a.75.75 0 0 0-.01-1.05z"/></svg>
+                        บันทึกข้อมูล
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- JavaScript Libraries -->
+    <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
+    <script src="https://npmcdn.com/flatpickr/dist/l10n/th.js"></script>
+    <script src="https://cdn.datatables.net/2.0.8/js/dataTables.min.js"></script>
+    <script src="https://cdn.datatables.net/2.0.8/js/dataTables.bootstrap5.min.js"></script>
+    <script src="https://cdn.datatables.net/responsive/3.0.2/js/dataTables.responsive.min.js"></script>
+    <script src="https://cdn.datatables.net/responsive/3.0.2/js/responsive.bootstrap5.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <script src="https://cdn.jsdelivr.net/npm/signature_pad@4.0.0/dist/signature_pad.umd.min.js"></script>
+
+    <script>
+        // !! IMPORTANT !!
+        // PASTE YOUR GOOGLE APPS SCRIPT WEB APP URL HERE
+        const WEB_APP_URL = 'https://script.google.com/macros/s/AKfycbzJNYzs1IKLaPGmx7tBQ04-9bNBTNawEy_SQhix0kInZ5UZrMggJ3K63aXEV_I1hdxm/exec';
+
+        document.addEventListener('DOMContentLoaded', function() {
+            if (window.attendanceAppInitialized) return;
+            window.attendanceAppInitialized = true;
+            
+            let signaturePad, datePicker, attendanceDataTable;
+            let teacherSessionsData = []; // Store all sessions for the teacher
+            const canvas = document.getElementById('signature-pad');
+
+            const updateDayOfWeek = (selectedDates) => {
+                if (selectedDates.length > 0) {
+                    const thaiDays = ["อาทิตย์", "จันทร์", "อังคาร", "พุธ", "พฤหัสบดี", "ศุกร์", "เสาร์"];
+                    const dayIndex = selectedDates[0].getDay();
+                    $('#checkDay').val(thaiDays[dayIndex]);
+                    // **MODIFIED:** When date changes, re-filter and populate sessions
+                    populateSessionSelector(teacherSessionsData); 
+                }
+            };
+
+            function resizeCanvas() {
+                if (!signaturePad) return;
+                const ratio = Math.max(window.devicePixelRatio || 1, 1);
+                canvas.width = canvas.offsetWidth * ratio;
+                canvas.height = canvas.offsetHeight * ratio;
+                canvas.getContext("2d").scale(ratio, ratio);
+                signaturePad.fromData(signaturePad.toData());
+            }
+            
+            function initializeApp() {
+                datePicker = flatpickr("#checkDate", {
+                    locale: "th",
+                    dateFormat: "j M Y",
+                    maxDate: "today",
+                    defaultDate: "today",
+                    onChange: updateDayOfWeek,
+                    onReady: updateDayOfWeek
+                });
+                
+                signaturePad = new SignaturePad(canvas, { backgroundColor: 'rgb(255, 255, 255)' });
+
+                attendanceDataTable = new DataTable('#attendanceTable', {
+                    responsive: true, paging: false, info: false, searching: false,
+                    destroy: true, language: { zeroRecords: "ไม่พบข้อมูลนักเรียน" },
+                    columnDefs: [{ orderable: false, targets: [0, 2] }]
+                });
+
+                addEventListeners();
+                updateSummary();
+                toggleEditMode(true);
+                resizeCanvas(); 
+            }
+
+            // **MODIFIED:** New function to populate the session selector
+            function populateSessionSelector(sessions) {
+                const selector = $('#sessionSelector');
+                selector.html('<option value="" selected>กรุณาเลือกคาบสอน...</option>'); // Reset
+
+                const currentDay = $('#checkDay').val();
+                const todaysSessions = sessions.filter(s => s.day === currentDay);
+
+                if (todaysSessions.length > 0) {
+                    todaysSessions.forEach((s, index) => {
+                        const optionText = `คาบ ${s.period} - ${s.className} - ${s.subjectName}`;
+                        // Store the original index from the filtered array in the value
+                        selector.append(new Option(optionText, index));
+                    });
+                    selector.prop('disabled', false);
+                } else {
+                    selector.html('<option value="" selected>ไม่มีรายการสอนสำหรับวันนี้</option>');
+                    selector.prop('disabled', true);
+                }
+                resetCourseDetails();
+            }
+            
+            // **MODIFIED:** New function to reset fields
+            function resetCourseDetails() {
+                $('#className, #subjectName, #classPeriod, #classPeriodDisplay').val('');
+            }
+
+
+            function getTeacherData(teacherId) {
+                if (!teacherId) return;
+
+                Swal.fire({
+                    title: 'กำลังดึงข้อมูลครู...',
+                    allowOutsideClick: false,
+                    didOpen: () => Swal.showLoading()
+                });
+
+                fetch(`${WEB_APP_URL}?action=getTeachData&teacherId=${teacherId}`)
+                    .then(response => response.json())
+                    .then(result => {
+                        Swal.close();
+                        if (result.status === 'success' && result.data.length > 0) {
+                            teacherSessionsData = result.data; // Store data globally
+                            const teacher = result.data[0];
+                            $('#teacher-name').val(teacher.teacherName);
+                            $('#learning-area').val(teacher.learningArea);
+                            populateSessionSelector(teacherSessionsData); // Populate the new dropdown
+                        } else {
+                            throw new Error(result.message || "ไม่พบข้อมูลครู");
+                        }
+                    })
+                    .catch(error => {
+                        Swal.fire({
+                            icon: 'error',
+                            title: 'เกิดข้อผิดพลาด',
+                            text: `ไม่สามารถดึงข้อมูลครูได้: ${error.message}`
+                        });
+                        $('#teacher-name, #learning-area').val('');
+                        teacherSessionsData = [];
+                        populateSessionSelector([]); // Clear dropdown
+                    });
+            }
+
+            function loadStudents() {
+                const className = $('#className').val().trim();
+                if (!className) {
+                    Swal.fire({ icon: 'error', title: 'ข้อผิดพลาด', text: 'กรุณาเลือกคาบสอนก่อน' });
+                    return;
+                }
+
+                Swal.fire({
+                    title: 'กำลังโหลดรายชื่อนักเรียน...',
+                    allowOutsideClick: false,
+                    didOpen: () => Swal.showLoading()
+                });
+
+                fetch(`${WEB_APP_URL}?action=getStudentData&className=${className}`)
+                    .then(response => response.json())
+                    .then(result => {
+                        Swal.close();
+                        if (result.status === 'success' && result.data.length > 0) {
+                            populateStudentTable(result.data);
+                            $('#page1').hide();
+                            $('#page2').show();
+                            resizeCanvas();
+                        } else {
+                            const errorMessage = result.data.length === 0 ? `ไม่พบนักเรียนในชั้น '${className}'` : result.message;
+                            throw new Error(errorMessage);
+                        }
+                    })
+                    .catch(error => {
+                        Swal.fire({
+                            icon: 'error',
+                            title: 'เกิดข้อผิดพลาด',
+                            text: `ไม่สามารถโหลดข้อมูลนักเรียนได้: ${error.message}`
+                        });
+                    });
+            }
+
+            function populateStudentTable(students) {
+                attendanceDataTable.clear();
+                students.forEach((student, index) => {
+                    const i = index + 1;
+                    const photoUrl = student.photo || `https://placehold.co/50x50/EFEFEF/AAAAAA&text=S${i}`;
+                    const statusHtml = `
+                        <div class="btn-group btn-group-sm status-btn-group" role="group">
+                            <input type="checkbox" class="btn-check" name="status-group-${i}" id="present-${i}" value="มา" autocomplete="off" checked><label class="btn btn-outline-success" for="present-${i}">มา</label>
+                            <input type="checkbox" class="btn-check" name="status-group-${i}" id="leave-${i}" value="ลา" autocomplete="off"><label class="btn btn-outline-info" for="leave-${i}">ลา</label>
+                            <input type="checkbox" class="btn-check" name="status-group-${i}" id="absent-${i}" value="ขาด" autocomplete="off"><label class="btn btn-outline-danger" for="absent-${i}">ขาด</label>
+                            <input type="checkbox" class="btn-check" name="status-group-${i}" id="skip-${i}" value="หนี" autocomplete="off"><label class="btn btn-outline-warning" for="skip-${i}">หนี</label>
+                            <input type="checkbox" class="btn-check" name="status-group-${i}" id="activity-${i}" value="กก" autocomplete="off"><label class="btn btn-outline-primary" for="activity-${i}">กก.</label>
+                        </div>`;
+                    const rowNode = $(`<tr data-student-id="${student.studentId}"><td class="text-center"><img src="${photoUrl}" onerror="this.onerror=null;this.src='https://placehold.co/50x50/EFEFEF/AAAAAA&text=Error';" alt="รูปนักเรียน" class="student-photo"></td><td class="student-name">${student.studentName}</td><td class="text-center">${statusHtml}</td></tr>`);
+                    attendanceDataTable.row.add(rowNode);
+                });
+                attendanceDataTable.draw();
+                updateSummary();
+            }
+
+            const updateSummary = () => {
+                let counts = { 'มา': 0, 'ลา': 0, 'ขาด': 0, 'หนี': 0, 'กก': 0 };
+                attendanceDataTable.rows().every(function () {
+                    const status = $(this.node()).find('input.btn-check:checked').val();
+                    if(status) counts[status]++;
+                });
+                $('#totalCount').text(attendanceDataTable.rows().count());
+                $('#presentCount').text(counts['มา']);
+                $('#leaveCount').text(counts['ลา']);
+                $('#absentCount').text(counts['ขาด']);
+                $('#skipCount').text(counts['หนี']);
+                $('#activityCount').text(counts['กก']);
+            };
+
+            const toggleEditMode = (isEditing) => {
+                $('#courseInfoFieldset :input').not('#teacherId, #checkDate, #sessionSelector').prop('readonly', true);
+                $('#teacherId, #checkDate, #sessionSelector').prop('disabled', !isEditing);
+                isEditing ? datePicker.set('maxDate', "today") : datePicker.set('maxDate', datePicker.selectedDates[0] || "today");
+                
+                $('#page2').find('.btn-check').prop('disabled', !isEditing);
+                $('#statusControlButtons').toggle(isEditing);
+                
+                if (isEditing) {
+                    signaturePad.on();
+                    $('#signature-pad-container').removeClass('signature-pad-container-disabled');
+                    $('#clear-signature').show();
+                } else {
+                    signaturePad.off();
+                    $('#signature-pad-container').addClass('signature-pad-container-disabled');
+                    $('#clear-signature').hide();
+                }
+                $('#saveButton').toggle(isEditing);
+                $('#editButton').toggle(!isEditing);
+            };
+
+            const setAllStatuses = (statusValue) => {
+                attendanceDataTable.rows().every(function () {
+                    const rowNode = this.node();
+                    $(rowNode).find('input.btn-check').prop('checked', false);
+                    $(rowNode).find(`input.btn-check[value='${statusValue}']`).prop('checked', true);
+                });
+                Swal.fire({ icon: 'info', title: `ตั้งสถานะนักเรียนทั้งหมดเป็น "${statusValue}" เรียบร้อยแล้ว`, timer: 1500, showConfirmButton: false });
+                updateSummary();
+            };
+            
+            function handleSave() {
+                if(signaturePad.isEmpty()){
+                    Swal.fire({ icon: 'error', title: 'ข้อผิดพลาด', text: 'กรุณาลงลายมือชื่อครูผู้สอน' });
+                    return;
+                }
+                
+                let summary = { present: 0, leave: [], absent: [], skip: [], activity: [] };
+                let attendanceData = [];
+                attendanceDataTable.rows().every(function () {
+                    const rowNode = $(this.node());
+                    const studentName = rowNode.find('.student-name').text();
+                    const status = rowNode.find('input.btn-check:checked').val();
+                    attendanceData.push({ name: studentName, status: status });
+
+                    if (status === 'มา') summary.present++;
+                    else if (status === 'ลา') summary.leave.push(studentName);
+                    else if (status === 'ขาด') summary.absent.push(studentName);
+                    else if (status === 'หนี') summary.skip.push(studentName);
+                    else if (status === 'กก') summary.activity.push(studentName);
+                });
+                
+                let summaryHtml = `<div class="mb-2"><b>มา:</b> ${summary.present} คน</div>`;
+                if(summary.leave.length > 0) summaryHtml += `<div class="mb-2"><b>ลา (${summary.leave.length} คน):</b><ul>${summary.leave.map(name => `<li>${name}</li>`).join('')}</ul></div>`;
+                if(summary.absent.length > 0) summaryHtml += `<div class="mb-2"><b>ขาด (${summary.absent.length} คน):</b><ul>${summary.absent.map(name => `<li>${name}</li>`).join('')}</ul></div>`;
+                if(summary.skip.length > 0) summaryHtml += `<div class="mb-2"><b>หนี (${summary.skip.length} คน):</b><ul>${summary.skip.map(name => `<li>${name}</li>`).join('')}</ul></div>`;
+                if(summary.activity.length > 0) summaryHtml += `<div><b>กก. (${summary.activity.length} คน):</b><ul>${summary.activity.map(name => `<li>${name}</li>`).join('')}</ul></div>`;
+                
+                Swal.fire({
+                    title: 'ยืนยันการบันทึกข้อมูล?', html: summaryHtml, icon: 'question',
+                    showCancelButton: true, confirmButtonColor: '#3085d6', cancelButtonColor: '#d33',
+                    confirmButtonText: 'ยืนยัน', cancelButtonText: 'ยกเลิก'
+                }).then((result) => {
+                    if (result.isConfirmed) postDataToServer(attendanceData);
+                });
+            }
+
+            function postDataToServer(attendanceData) {
+                Swal.fire({
+                    title: 'กำลังบันทึกข้อมูล...',
+                    allowOutsideClick: false,
+                    didOpen: () => Swal.showLoading()
+                });
+
+                const selectedDate = datePicker.selectedDates[0];
+                const courseInfo = {
+                    teacherId: $('#teacherId').val(), teacherName: $('#teacher-name').val(), learningArea: $('#learning-area').val(),
+                    date: $('#checkDate').val(), raw_date: selectedDate ? selectedDate.toISOString().split('T')[0] : '',
+                    day: $('#checkDay').val(),
+                    className: $('#className').val(), 
+                    subjectName: $('#subjectName').val(),
+                    period: $('#classPeriod').val()
+                };
+                const finalData = { 
+                    courseInfo: courseInfo, 
+                    attendance: attendanceData, 
+                    teacherSignature: signaturePad.toDataURL('image/png')
+                };
+
+                fetch(WEB_APP_URL, {
+                    method: 'POST',
+                    body: JSON.stringify(finalData),
+                    headers: { 'Content-Type': 'text/plain;charset=utf-8' }
+                })
+                .then(response => response.json())
+                .then(result => {
+                    if (result.status === 'success') {
+                        Swal.fire({ icon: 'success', title: 'สำเร็จ!', text: 'บันทึกข้อมูลเรียบร้อยแล้ว' });
+                        toggleEditMode(false);
+                    } else {
+                        throw new Error(result.message);
+                    }
+                })
+                .catch(error => {
+                    Swal.fire({ icon: 'error', title: 'เกิดข้อผิดพลาดในการบันทึก', text: error.message });
+                });
+            }
+
+            function addEventListeners() {
+                $('#teacherId').on('blur', function() { getTeacherData($(this).val()); });
+
+                // **MODIFIED:** New event listener for the session selector
+                $('#sessionSelector').on('change', function() {
+                    const selectedIndex = $(this).val();
+                    if (selectedIndex === "") {
+                        resetCourseDetails();
+                        return;
+                    }
+                    
+                    const currentDay = $('#checkDay').val();
+                    const todaysSessions = teacherSessionsData.filter(s => s.day === currentDay);
+                    const session = todaysSessions[selectedIndex];
+
+                    if (session) {
+                        $('#className').val(session.className);
+                        $('#subjectName').val(session.subjectName);
+                        $('#classPeriod').val(session.period);
+                        $('#classPeriodDisplay').val(`คาบ ${session.period}`);
+                    }
+                });
+
+                $('#goToAttendancePage').on('click', function() {
+                    let form = document.getElementById('infoForm');
+                    if (form.checkValidity() === false) {
+                        Swal.fire({ icon: 'warning', title: 'ข้อมูลไม่ครบถ้วน', text: 'กรุณากรอกรหัสครูและเลือกคาบสอน' });
+                        form.classList.add('was-validated');
+                    } else {
+                        loadStudents();
+                    }
+                });
+
+                $('#backToInfoPage').on('click', () => { $('#page2').hide(); $('#page1').show(); });
+                
+                $('#editButton').on('click', () => { 
+                    toggleEditMode(true); 
+                    Swal.fire({ icon: 'info', title: 'เปิดโหมดแก้ไข', text: 'คุณสามารถแก้ไขข้อมูลได้แล้ว', timer: 1500, showConfirmButton: false });
+                });
+                
+                $('#saveButton').on('click', handleSave);
+
+                $('#attendanceTable tbody').on('change', 'input.btn-check', function() {
+                    const $this = $(this);
+                    $(`input.btn-check[name="${$this.attr('name')}"]`).not(this).prop('checked', false);
+                    $this.prop('checked', true);
+                    updateSummary();
+                });
+                
+                $('#attendanceTable tbody').on('click', '.student-photo', function() {
+                    const img_src = $(this).attr('src').replace(/50x50/g, '250x250');
+                    const studentName = $(this).closest('tr').find('.student-name').text();
+                    Swal.fire({ title: studentName, imageUrl: img_src, imageWidth: 250, imageHeight: 250, confirmButtonText: 'ปิด' });
+                });
+
+                $('#setAllPresent').on('click', () => setAllStatuses('มา'));
+                $('#setAllLeave').on('click', () => setAllStatuses('ลา'));
+                $('#setAllAbsent').on('click', () => setAllStatuses('ขาด'));
+                $('#setAllSkip').on('click', () => setAllStatuses('หนี'));
+                $('#setAllActivity').on('click', () => setAllStatuses('กก'));
+                $('#resetAllStatus').on('click', () => setAllStatuses('มา'));
+                $('#clear-signature').on('click', () => signaturePad.clear());
+                window.addEventListener("resize", resizeCanvas);
+            }
+
+            initializeApp();
+        });
+    </script>
+
+</body>
+</html>
