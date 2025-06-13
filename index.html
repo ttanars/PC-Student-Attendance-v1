@@ -225,16 +225,21 @@
             </div>
             
             <div class="container text-center mt-3 mb-3">
-                <marquee behavior="scroll" direction="left" style="color:#000000; font-size: 15px;margin-top: 2px; margin-bottom: 2px;" onmouseover="this.stop();" onmouseout="this.start();"><h5 style="margin-top: 2px; margin-bottom: 4px;"><img src="https://lh5.googleusercontent.com/d/1cD2nVKNscJg1DJPnkaakah7Nz4ez_BZS" height="12" width="25" > ยินดีต้อนรับเข้าสู่ระบบเล่มแดงออนไลน์ โรงเรียนปากช่อง :: ออกแบบและพัฒนาโดย KT | Tanasarn Sirak <img src="https://lh5.googleusercontent.com/d/1cD2nVKNscJg1DJPnkaakah7Nz4ez_BZS" height="12" width="25" ></h5></marquee>
+                <marquee behavior="scroll" direction="left" style="color:#000000; font-size: 15px;margin-top: 2px; margin-bottom: 2px;" onmouseover="this.stop();" onmouseout="this.start();"><h4 style="margin-top: 2px; margin-bottom: 4px;"><img src="https://lh5.googleusercontent.com/d/1cD2nVKNscJg1DJPnkaakah7Nz4ez_BZS" height="12" width="25" > ยินดีต้อนรับเข้าสู่ระบบเล่มแดงออนไลน์ โรงเรียนปากช่อง :: ออกแบบและพัฒนาโดย KT | Tanasarn Sirak <img src="https://lh5.googleusercontent.com/d/1cD2nVKNscJg1DJPnkaakah7Nz4ez_BZS" height="12" width="25" ></h4></marquee>
             </div>
             
             <form id="infoForm" novalidate>
                 <fieldset id="courseInfoFieldset">
-                     <h5 class="mb-3">ข้อมูลการสอน</h5>
+                     <h5 class="mb-3 d-flex justify-content-between align-items-center">
+                        <span>ข้อมูลการสอน</span>
+                        <button type="button" id="changeTeacherBtn" class="btn btn-sm btn-outline-secondary" style="display: none;">
+                            <i class="fas fa-sync-alt me-1"></i>เปลี่ยนครู
+                        </button>
+                     </h5>
                      <div class="row g-3">
-                        <div class="col-12">
+                        <div class="col-12" id="teacherIdContainer">
                             <label for="teacherId" class="form-label"><i class="fas fa-id-card me-2"></i>รหัสครูผู้สอน</label>
-                            <input type="tel" class="form-control text-center" id="teacherId" placeholder="กรอกรหัส 4 ตัวเพื่อค้นหา..." required maxlength="4">
+                            <input type="tel" class="form-control text-center" id="teacherId" placeholder="กรอกรหัสครูผู้สอนเพื่อค้นหา..." required maxlength="4">
                         </div>
                         
                         <div id="dateAndSessionContainer" class="col-12" style="display: none;">
@@ -483,7 +488,6 @@
                     columnDefs: [{ orderable: false, targets: [0, 2] }]
                 });
 
-                // Initially hide all optional containers
                 $('#dateAndSessionContainer, #teacherInfoContainer, #sessionDetailsContainer, #goToAttendancePage').hide();
                 
                 addEventListeners();
@@ -494,7 +498,7 @@
 
             function populateSessionSelector(sessions) {
                 const selector = $('#sessionSelector');
-                selector.html('<option value="" selected>กรุณาเลือกคาบสอน...</option>'); // Reset
+                selector.html('<option value="" selected>กรุณาเลือกคาบสอน...</option>'); 
 
                 const currentDay = $('#checkDay').val();
                 const todaysSessions = sessions.filter(s => s.day === currentDay);
@@ -507,20 +511,18 @@
                 } else {
                     selector.html('<option value="" selected>ไม่มีรายการสอนสำหรับวันนี้</option>');
                 }
-                // MODIFIED: No longer calls reset function here
             }
             
             function resetSessionDetails() {
-                // MODIFIED: This function now ONLY clears session-specific fields
                 $('#className, #subjectName, #classPeriod, #classPeriodDisplay, #classHours').val('');
                 $('#sessionDetailsContainer').slideUp();
                 $('#goToAttendancePage').hide();
             }
 
-
             function getTeacherData(teacherId) {
                 if (!teacherId || teacherId.length < 4) {
                     $('#dateAndSessionContainer, #teacherInfoContainer, #sessionDetailsContainer, #goToAttendancePage').slideUp();
+                    $('#changeTeacherBtn').hide();
                     teacherSessionsData = [];
                     return;
                 }
@@ -542,11 +544,13 @@
                                 showConfirmButton: false
                             });
                             
-                            // MODIFIED: Populate teacher info and show its container
                             $('#teacher-name').val(teacher.teacherName);
                             $('#learning-area').val(teacher.learningArea);
+                            
+                            // MODIFIED: Hide input, show data and change button
+                            $('#teacherIdContainer').slideUp();
+                            $('#changeTeacherBtn').show();
                             $('#teacherInfoContainer').slideDown();
-
                             populateSessionSelector(teacherSessionsData);
                             $('#dateAndSessionContainer').slideDown();
                             
@@ -561,7 +565,9 @@
                             title: 'เกิดข้อผิดพลาด',
                             text: error.message
                         });
+                        $('#teacherIdContainer').slideDown();
                         $('#dateAndSessionContainer, #teacherInfoContainer, #sessionDetailsContainer, #goToAttendancePage').slideUp();
+                        $('#changeTeacherBtn').hide();
                         teacherSessionsData = [];
                     });
             }
@@ -758,7 +764,6 @@
                     }
                 });
 
-                // MODIFIED: Simplified change listener
                 $('#sessionSelector').on('change', function() {
                     const selectedIndex = $(this).val();
                     
@@ -783,6 +788,19 @@
                     } else {
                          resetSessionDetails();
                     }
+                });
+
+                // MODIFIED: Added event listener for the new button
+                $('#changeTeacherBtn').on('click', function() {
+                    $('#dateAndSessionContainer, #teacherInfoContainer, #sessionDetailsContainer, #goToAttendancePage').slideUp();
+                    
+                    $('#teacherId').val('');
+                    $('#teacherIdContainer').slideDown(() => {
+                        $('#teacherId').focus();
+                    });
+
+                    $(this).hide();
+                    teacherSessionsData = [];
                 });
 
                 $('#goToAttendancePage').on('click', function() {
