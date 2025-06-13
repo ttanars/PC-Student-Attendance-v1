@@ -12,6 +12,10 @@
     <link href="https://cdn.datatables.net/2.0.8/css/dataTables.bootstrap5.min.css" rel="stylesheet">
     <link href="https://cdn.datatables.net/responsive/3.0.2/css/responsive.bootstrap5.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.min.css">
+    
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" />
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/select2-bootstrap-5-theme@1.3.0/dist/select2-bootstrap-5-theme.min.css" />
+    
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Niramit:wght@400;700&display=swap" rel="stylesheet">
@@ -67,7 +71,7 @@
             height: 3.5rem;
         }
 
-        /* --- Student Photo Styling --- */
+        /* --- Photo Styling --- */
         .student-photo {
             width: 45px;
             height: 45px;
@@ -81,6 +85,14 @@
             transform: scale(1.2);
             box-shadow: 0 4px 12px rgba(0,0,0,0.2);
         }
+        #teacherPhotoPreview {
+            width: 100px;
+            height: 100px;
+            object-fit: cover;
+            border-radius: 50%;
+            border: 3px solid #dee2e6;
+        }
+
 
         /* --- Table and Status Buttons Styling --- */
         #sticky-top-container {
@@ -135,6 +147,37 @@
         }
         #classPeriodDropdown.is-invalid {
             border-color: #dc3545;
+        }
+        .schedule-row .form-control.is-invalid {
+            border-color: #dc3545; /* Bootstrap's danger color */
+        }
+
+        /* --- Tab Styling --- */
+        .nav-tabs .nav-link {
+            color: #495057;
+        }
+        .nav-tabs .nav-link.active {
+            color: #fff;
+            background-color: #0d6efd;
+            border-color: #0d6efd;
+        }
+
+        /* --- Manage Teacher Form Styling --- */
+        .day-schedule-header {
+            background-color: #f8f9fa;
+            padding: 0.75rem;
+            border-radius: 0.375rem;
+            font-weight: bold;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .schedule-row {
+            padding: 0.5rem;
+            border-radius: 0.25rem;
+        }
+        .schedule-row:nth-child(odd) {
+            background-color: #f8f9fa;
         }
 
         /* --- Summary Boxes Styling --- */
@@ -204,17 +247,17 @@
             border-radius: 0.5rem;
             margin-bottom: 0.5rem; 
         }
+        .tab-content {
+            margin-top: 1.5rem;
+        }
     </style>
 </head>
 <body>
 
     <div id="loadingOverlay" class="loading-overlay">
-        <div class="spinner-border text-primary" role="status">
-            <span class="visually-hidden">Loading...</span>
-        </div>
+        <img src="https://media1.giphy.com/media/mBMdeZHp6bqfkL4vBI/giphy.gif" alt="Loading..." style="width: 150px; border-radius: 8px;">
     </div>
-
-    <div id="page1" class="container-fluid mt-0 mb-0 mx-0">
+    <div id="mainContainer" class="container-fluid mt-0 mb-0 mx-0">
         <div class="card shadow-sm border-primary position-relative app-content-wrapper" style="padding: 15px; margin-bottom: 2px; border-radius: 20px; box-shadow: 0 4px 10px rgba(0, 0, 0, 0.5);">
             
             <div class="text-center" > 
@@ -228,83 +271,194 @@
                 <marquee behavior="scroll" direction="left" style="color:#000000; font-size: 15px;margin-top: 2px; margin-bottom: 2px;" onmouseover="this.stop();" onmouseout="this.start();"><h4 style="margin-top: 2px; margin-bottom: 4px;"><img src="https://lh5.googleusercontent.com/d/1cD2nVKNscJg1DJPnkaakah7Nz4ez_BZS" height="12" width="25" > ยินดีต้อนรับเข้าสู่ระบบเล่มแดงออนไลน์ โรงเรียนปากช่อง :: ออกแบบและพัฒนาโดย KT | Tanasarn Sirak <img src="https://lh5.googleusercontent.com/d/1cD2nVKNscJg1DJPnkaakah7Nz4ez_BZS" height="12" width="25" ></h4></marquee>
             </div>
             
-            <form id="infoForm" novalidate>
-                <fieldset id="courseInfoFieldset">
-                     <h5 class="mb-3 d-flex justify-content-between align-items-center">
-                        <span>ข้อมูลการสอน</span>
-                        <button type="button" id="changeTeacherBtn" class="btn btn-sm btn-outline-secondary" style="display: none;">
-                            <i class="fas fa-sync-alt me-1"></i>เปลี่ยนครู
-                        </button>
-                     </h5>
-                     <div class="row g-3">
-                        <div class="col-12" id="teacherIdContainer">
-                            <label for="teacherId" class="form-label"><i class="fas fa-id-card me-2"></i>รหัสครูผู้สอน</label>
-                            <input type="tel" class="form-control text-center" id="teacherId" placeholder="กรอกรหัสครูผู้สอนเพื่อค้นหา..." required maxlength="4">
-                        </div>
-                        
-                        <div id="dateAndSessionContainer" class="col-12" style="display: none;">
-                            <div class="row g-3">
-                                <div class="col-md-6">
-                                    <label for="checkDate" class="form-label"><i class="fas fa-calendar-day me-2"></i>วันที่เช็ค</label>
-                                    <input type="text" class="form-control" id="checkDate" placeholder="กรุณาเลือกวันที่..." required>
-                                </div>
-                                <div class="col-md-6">
-                                    <label for="sessionSelector" class="form-label"><i class="fas fa-person-chalkboard me-2"></i>เลือกคาบสอนสำหรับวันนี้</label>
-                                    <select class="form-select" id="sessionSelector" required>
-                                        <option value="" selected>กรุณาเลือกคาบสอน...</option>
-                                    </select>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                    
-                    <div id="teacherInfoContainer" style="display:none;">
-                        <div class="row g-3 mt-2">
-                            <div class="col-md-6">
-                                <label for="teacher-name" class="form-label">ชื่อ-สกุล ครูผู้สอน</label>
-                                <input type="text" class="form-control" id="teacher-name" placeholder="ข้อมูลอัตโนมัติ" readonly>
-                            </div>
-                             <div class="col-md-6">
-                                <label for="learning-area" class="form-label">กลุ่มสาระฯ</label>
-                                <input type="text" class="form-control" id="learning-area" placeholder="ข้อมูลอัตโนมัติ" readonly>
-                            </div>
-                        </div>
-                    </div>
-
-                    <div id="sessionDetailsContainer" style="display:none;">
-                        <div class="row g-3 mt-2">
-                             <div class="col-md-2 col-sm-6" style="display:none;">
-                                <label for="checkDay" class="form-label">วัน</label>
-                                <input type="text" class="form-control" id="checkDay" readonly>
-                            </div>
-                            <div class="col-md-4 col-sm-6">
-                                <label for="className" class="form-label">ชั้นเรียน</label>
-                                <input type="text" class="form-control" id="className" placeholder="ข้อมูลอัตโนมัติ" readonly>
-                            </div>
-                            <div class="col-md-4 col-sm-6">
-                                <label for="subjectName" class="form-label">ชื่อวิชา</label>
-                                <input type="text" class="form-control" id="subjectName" placeholder="ข้อมูลอัตโนมัติ" readonly>
-                            </div>
-                            <div class="col-md-2 col-sm-6">
-                                <label for="classPeriodDisplay" class="form-label">คาบที่สอน</label>
-                                <input type="text" class="form-control" id="classPeriodDisplay" placeholder="ข้อมูลอัตโนมัติ" readonly>
-                                <input type="hidden" id="classPeriod" required>
-                            </div>
-                            <div class="col-md-2 col-sm-6">
-                                <label for="classHours" class="form-label">จำนวนชั่วโมง</label>
-                                <input type="text" class="form-control" id="classHours" placeholder="ข้อมูลอัตโนมัติ" readonly>
-                            </div>
-                        </div>
-                    </div>
-                </fieldset>
-                <div class="text-center mt-4 mb-3">
-                    <button id="goToAttendancePage" type="button" class="btn btn-primary btn-lg" style="display:none;">
-                        เช็คชื่อนักเรียน
-                        <i class="fas fa-arrow-circle-right ms-2"></i>
+            <ul class="nav nav-tabs nav-fill" id="mainTab" role="tablist">
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link active" id="attendance-tab" data-bs-toggle="tab" data-bs-target="#attendance-tab-pane" type="button" role="tab" aria-controls="attendance-tab-pane" aria-selected="true">
+                        <i class="fas fa-user-check me-2"></i>เช็คชื่อนักเรียน
                     </button>
+                </li>
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link" id="manage-tab" data-bs-toggle="tab" data-bs-target="#manage-tab-pane" type="button" role="tab" aria-controls="manage-tab-pane" aria-selected="false">
+                        <i class="fas fa-chalkboard-teacher me-2"></i>จัดการข้อมูลครู
+                    </button>
+                </li>
+            </ul>
+
+            <div class="tab-content" id="mainTabContent">
+                <div class="tab-pane fade show active" id="attendance-tab-pane" role="tabpanel" aria-labelledby="attendance-tab" tabindex="0">
+                    <div id="page1">
+                        <form id="infoForm" novalidate>
+                            <fieldset id="courseInfoFieldset">
+                                 <h5 class="mb-3 d-flex justify-content-between align-items-center">
+                                    <span><b>ข้อมูลการสอน</b></span>
+                                    <button type="button" id="changeTeacherBtn" class="btn btn-sm btn-outline-secondary" style="display: none;">
+                                        <i class="fas fa-sync-alt me-1"></i>เปลี่ยนครู
+                                    </button>
+                                 </h5>
+                                 <div class="row g-3">
+                                    <div class="col-12" id="teacherIdContainer">
+                                        <label for="teacherId" class="form-label"><i class="fas fa-id-card me-2"></i>รหัสครูผู้สอน</label>
+                                        <input type="tel" class="form-control text-center" id="teacherId" placeholder="กรอกรหัสครูผู้สอนเพื่อค้นหา..." required maxlength="4">
+                                    </div>
+                                    
+                                    <div id="dateAndSessionContainer" class="col-12" style="display: none;">
+                                        <div class="row g-3">
+                                            <div class="col-md-6">
+                                                <label for="checkDate" class="form-label"><i class="fas fa-calendar-day me-2"></i>วันที่เช็ค</label>
+                                                <input type="text" class="form-control" id="checkDate" placeholder="กรุณาเลือกวันที่..." required>
+                                            </div>
+                                            <div class="col-md-6">
+                                                <label for="sessionSelector" class="form-label"><i class="fas fa-person-chalkboard me-2"></i>เลือกคาบสอนสำหรับวันนี้</label>
+                                                <select class="form-select" id="sessionSelector" required>
+                                                    <option value="" selected>กรุณาเลือกคาบสอน...</option>
+                                                </select>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                <div id="teacherInfoContainer" style="display:none;">
+                                    <div class="row g-3 mt-2">
+                                        <div class="col-md-6">
+                                            <label for="teacher-name" class="form-label">ชื่อ-สกุล ครูผู้สอน</label>
+                                            <input type="text" class="form-control" id="teacher-name" placeholder="ข้อมูลอัตโนมัติ" readonly>
+                                        </div>
+                                         <div class="col-md-6">
+                                            <label for="learning-area" class="form-label">กลุ่มสาระฯ</label>
+                                            <input type="text" class="form-control" id="learning-area" placeholder="ข้อมูลอัตโนมัติ" readonly>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div id="sessionDetailsContainer" style="display:none;">
+                                    <div class="row g-3 mt-2">
+                                         <div class="col-md-2 col-sm-6" style="display:none;">
+                                            <label for="checkDay" class="form-label">วัน</label>
+                                            <input type="text" class="form-control" id="checkDay" readonly>
+                                        </div>
+                                        <div class="col-md-4 col-sm-6">
+                                            <label for="className" class="form-label">ชั้นเรียน</label>
+                                            <input type="text" class="form-control" id="className" placeholder="ข้อมูลอัตโนมัติ" readonly>
+                                        </div>
+                                        <div class="col-md-4 col-sm-6">
+                                            <label for="subjectName" class="form-label">ชื่อวิชา</label>
+                                            <input type="text" class="form-control" id="subjectName" placeholder="ข้อมูลอัตโนมัติ" readonly>
+                                        </div>
+                                        <div class="col-md-2 col-sm-6">
+                                            <label for="classPeriodDisplay" class="form-label">คาบที่สอน</label>
+                                            <input type="text" class="form-control" id="classPeriodDisplay" placeholder="ข้อมูลอัตโนมัติ" readonly>
+                                            <input type="hidden" id="classPeriod" required>
+                                        </div>
+                                        <div class="col-md-2 col-sm-6">
+                                            <label for="classHours" class="form-label">จำนวนชั่วโมง</label>
+                                            <input type="text" class="form-control" id="classHours" placeholder="ข้อมูลอัตโนมัติ" readonly>
+                                        </div>
+                                    </div>
+                                </div>
+                            </fieldset>
+                            <div class="text-center mt-4 mb-3">
+                                <button id="goToAttendancePage" type="button" class="btn btn-primary btn-lg" style="display:none;">
+                                    เช็คชื่อนักเรียน
+                                    <i class="fas fa-arrow-circle-right ms-2"></i>
+                                </button>
+                            </div>
+                        </form>
+                    </div>
                 </div>
-            </form>
-            <footer style="text-align: center;background-color:#faff99; padding: 10px 0; margin-top: auto; border-top: 1px solid #e0e0e0; font-size: 0.9em; color: #555; width: 100%;">
+
+                <div class="tab-pane fade" id="manage-tab-pane" role="tabpanel" aria-labelledby="manage-tab" tabindex="0">
+                     <form id="manageTeachForm" class="p-2" novalidate>
+                        <h5 class="mb-3"><b>จัดการข้อมูลครูและตารางสอน</b></h5>
+                        
+                        <div class="row g-3 align-items-end">
+                             <div class="col-12">
+                                <label for="newTeacherId" class="form-label"><i class="fas fa-id-card me-2"></i>รหัสครู (4 หลัก)</label>
+                                <input type="tel" class="form-control text-center" id="newTeacherId" required maxlength="4" placeholder="กรอกรหัสครู 4 หลักเพื่อดึงข้อมูล">
+                            </div>
+                        </div>
+
+                        <div id="teacherDetailsContainer" style="display: none;">
+                            <div class="row g-3 mt-2">
+                                <div class="col-md-4">
+                                    <label for="newTeacherName" class="form-label"><i class="fas fa-user me-2"></i>ชื่อ-สกุล ครูผู้สอน</label>
+                                    <input type="text" class="form-control" id="newTeacherName" readonly>
+                                </div>
+                                <div class="col-md-4">
+                                    <label for="newLearningArea" class="form-label"><i class="fas fa-layer-group me-2"></i>กลุ่มสาระฯ</label>
+                                    <input type="text" class="form-control" id="newLearningArea" readonly>
+                                </div>
+                                <div class="col-md-4">
+                                    <label for="newTeacherPosition" class="form-label"><i class="fas fa-user-tie me-2"></i>ตำแหน่ง</label>
+                                    <input type="text" class="form-control" id="newTeacherPosition" readonly>
+                                </div>
+                            </div>
+
+                            <div class="row g-3 mt-3 align-items-end">
+                                <div class="col-auto">
+                                    <img id="teacherPhotoPreview" src="https://placehold.co/100x100/EFEFEF/AAAAAA&text=Photo" alt="Teacher Photo Preview">
+                                </div>
+                                <div class="col">
+                                    <label for="newPhotoUpload" class="form-label"><i class="fas fa-camera me-2"></i>อัปโหลดรูปภาพใหม่</label>
+                                    <input class="form-control" type="file" id="newPhotoUpload" accept="image/png, image/jpeg">
+                                    <div class="form-text">อัปโหลดไฟล์ใหม่เพื่อเปลี่ยนรูปภาพปัจจุบัน</div>
+                                </div>
+                                 <div class="col-auto">
+                                    <button type="button" class="btn btn-outline-primary" id="saveTeacherPhotoBtn">
+                                        <i class="fas fa-save me-1"></i> บันทึกรูปภาพ
+                                    </button>
+                                </div>
+                            </div>
+                            
+                            <hr class="my-4">
+
+                            <div id="scheduleContainer">
+                                <h5 class="mb-3"><b>ตารางสอน (กรอกเฉพาะคาบที่มีสอน)</b></h5>
+                                
+                                <div class="day-schedule-wrapper" data-day="จันทร์">
+                                    <div class="day-schedule-header bg-warning">
+                                        <span>วันจันทร์</span>
+                                        <button type="button" class="btn btn-sm btn-success add-schedule-row-btn"><i class="fas fa-plus"></i> เพิ่มคาบ</button>
+                                    </div>
+                                    <div class="day-schedule-container mt-2"></div>
+                                </div>
+                                <div class="day-schedule-wrapper mt-3" data-day="อังคาร">
+                                    <div class="day-schedule-header" style="background-color:pink;" >
+                                        <span>วันอังคาร</span>
+                                        <button type="button" class="btn btn-sm btn-success add-schedule-row-btn"><i class="fas fa-plus"></i> เพิ่มคาบ</button>
+                                    </div>
+                                    <div class="day-schedule-container mt-2"></div>
+                                </div>
+                                <div class="day-schedule-wrapper mt-3" data-day="พุธ">
+                                    <div class="day-schedule-header" style="background-color: green; color: white;" >
+                                        <span>วันพุธ</span>
+                                        <button type="button" class="btn btn-sm btn-success add-schedule-row-btn"><i class="fas fa-plus"></i> เพิ่มคาบ</button>
+                                    </div>
+                                    <div class="day-schedule-container mt-2"></div>
+                                </div>
+                                <div class="day-schedule-wrapper mt-3" data-day="พฤหัสบดี">
+                                    <div class="day-schedule-header" style="background-color:orange;">
+                                        <span>วันพฤหัสบดี</span>
+                                        <button type="button" class="btn btn-sm btn-success add-schedule-row-btn"><i class="fas fa-plus"></i> เพิ่มคาบ</button>
+                                    </div>
+                                    <div class="day-schedule-container mt-2"></div>
+                                </div>
+                                <div class="day-schedule-wrapper mt-3" data-day="ศุกร์">
+                                    <div class="day-schedule-header" style="background-color:cyan;">
+                                        <span>วันศุกร์</span>
+                                        <button type="button" class="btn btn-sm btn-success add-schedule-row-btn"><i class="fas fa-plus"></i> เพิ่มคาบ</button>
+                                    </div>
+                                    <div class="day-schedule-container mt-2"></div>
+                                </div>
+                                
+                                <div class="text-center mt-4">
+                                    <button id="saveTeachDataBtn" type="button" class="btn btn-success btn-lg">
+                                        <i class="fas fa-plus-circle me-2"></i>บันทึกข้อมูลตารางสอน
+                                    </button>
+                                </div>
+                            </div>
+                        </div> </form>
+                </div>
+            </div> <footer style="text-align: center;background-color:#faff99; padding: 10px 0; margin-top: auto; border-top: 1px solid #e0e0e0; font-size: 0.9em; color: #555; width: 100%;">
                 :: Created and Develop by KT|Tanasarn Sirak ::
                 <div class="container text-center">
                 <a href="https://line.me/ti/p/3F7VGrqgUr" target="_blank"><i class="fa-solid fa-comments"></i></a> <a style="color:red;text-decoration:none;font-size:12px" href="https://line.me/ti/p/3F7VGrqgUr" target="_blank"> สอบถาม/แจ้งปัญหา :: <span style="font-size:12px;color:black">KT | Tanasarn Sirak © <script>document.write(new Date().getFullYear()+543)</script> </a>
@@ -316,7 +470,7 @@
             <a href="https://www.freecounterstat.com" title="website counter"><img src="https://counter1.optistats.ovh/private/freecounterstat.php?c=uwgfnf4ee1nu15h57t14a9pnpf2h58za" border="0" title="website counter" alt="website counter"></a>
             </div> 
         </div>
-        </div>
+    </div>
 
     <div id="page2" class="container-fluid mt-0 mb-0 mx-0" style="display: none;">
         <div class="card shadow-sm border-primary position-relative app-content-wrapper" style="padding: 15px; margin-bottom: 2px; border-radius: 20px; box-shadow: 0 4px 10px rgba(0, 0, 0, 0.5);">
@@ -390,10 +544,153 @@
             :: จำนวนผู้ใช้งาน ::
             <a href="https://www.freecounterstat.com" title="website counter"><img src="https://counter1.optistats.ovh/private/freecounterstat.php?c=uwgfnf4ee1nu15h57t14a9pnpf2h58za" border="0" title="website counter" alt="website counter"></a>
             </div> 
-            
-            
         </div>
     </div>
+
+    <template id="scheduleRowTemplate">
+        <div class="row g-2 align-items-end schedule-row mb-2">
+            <div class="col-2">
+                <label class="form-label" style="font-size: 0.8rem;">คาบที่</label>
+                <select class="form-select form-select-sm new-period" data-placeholder="เลือกคาบ...">
+                    <option value="">เลือกคาบ...</option>
+                    <option value="1">คาบ 1</option>
+                    <option value="1-2">คาบ 1-2</option>
+                    <option value="2">คาบ 2</option>
+                    <option value="2-3">คาบ 2-3</option>
+                    <option value="3">คาบ 3</option>
+                    <option value="3-4">คาบ 3-4</option>
+                    <option value="4">คาบ 4</option>
+                    <option value="4-5">คาบ 4-5</option>
+                    <option value="5">คาบ 5</option>
+                    <option value="5-6">คาบ 5-6</option>
+                    <option value="6">คาบ 6</option>
+                    <option value="6-7">คาบ 6-7</option>
+                    <option value="7">คาบ 7</option>
+                    <option value="7-8">คาบ 7-8</option>
+                    <option value="8">คาบ 8</option>
+                    <option value="8-9">คาบ 8-9</option>
+                </select>
+            </div>
+            <div class="col-2">
+                <label class="form-label" style="font-size: 0.8rem;">จำนวนชม.</label>
+                <select class="form-select form-select-sm new-hours"  data-placeholder="เลือกจำนวนชั่วโมง...">
+				    <option value="">เลือกจำนวนชั่วโมง...</option>
+                    <option value="1">1 ชั่วโมง</option>
+                    <option value="2">2 ชั่วโมง</option>
+                </select>
+            </div>
+            <div class="col-3">
+                 <label class="form-label" style="font-size: 0.8rem;">ชั้นเรียน</label>
+                 <select class="form-select form-select-sm new-classname" data-placeholder="เลือกชั้นเรียน...">
+                    <option value="">เลือกชั้นเรียน...</option>
+                    <optgroup label="มัธยมศึกษาปีที่ 1">
+                        <option value="ม.1/1">ม.1/1</option>
+                        <option value="ม.1/2">ม.1/2</option>
+                        <option value="ม.1/3">ม.1/3</option>
+                        <option value="ม.1/4">ม.1/4</option>
+                        <option value="ม.1/5">ม.1/5</option>
+                        <option value="ม.1/6">ม.1/6</option>
+                        <option value="ม.1/7">ม.1/7</option>
+                        <option value="ม.1/8">ม.1/8</option>
+                        <option value="ม.1/9">ม.1/9</option>
+                        <option value="ม.1/10">ม.1/10</option>
+                        <option value="ม.1/11">ม.1/11</option>
+                        <option value="ม.1/12">ม.1/12</option>
+                        <option value="ม.1/13">ม.1/13</option>
+                        <option value="ม.1/14">ม.1/14</option>
+                    </optgroup>
+                    <optgroup label="มัธยมศึกษาปีที่ 2">
+                        <option value="ม.2/1">ม.2/1</option>
+                        <option value="ม.2/2">ม.2/2</option>
+                        <option value="ม.2/3">ม.2/3</option>
+                        <option value="ม.2/4">ม.2/4</option>
+                        <option value="ม.2/5">ม.2/5</option>
+                        <option value="ม.2/6">ม.2/6</option>
+                        <option value="ม.2/7">ม.2/7</option>
+                        <option value="ม.2/8">ม.2/8</option>
+                        <option value="ม.2/9">ม.2/9</option>
+                        <option value="ม.2/10">ม.2/10</option>
+                        <option value="ม.2/11">ม.2/11</option>
+                        <option value="ม.2/12">ม.2/12</option>
+                        <option value="ม.2/13">ม.2/13</option>
+                        <option value="ม.2/14">ม.2/14</option>
+                    </optgroup>
+                    <optgroup label="มัธยมศึกษาปีที่ 3">
+                        <option value="ม.3/1">ม.3/1</option>
+                        <option value="ม.3/2">ม.3/2</option>
+                        <option value="ม.3/3">ม.3/3</option>
+                        <option value="ม.3/4">ม.3/4</option>
+                        <option value="ม.3/5">ม.3/5</option>
+                        <option value="ม.3/6">ม.3/6</option>
+                        <option value="ม.3/7">ม.3/7</option>
+                        <option value="ม.3/8">ม.3/8</option>
+                        <option value="ม.3/9">ม.3/9</option>
+                        <option value="ม.3/10">ม.3/10</option>
+                        <option value="ม.3/11">ม.3/11</option>
+                        <option value="ม.3/12">ม.3/12</option>
+                        <option value="ม.3/13">ม.3/13</option>
+                        <option value="ม.3/14">ม.3/14</option>
+                    </optgroup>
+                    <optgroup label="มัธยมศึกษาปีที่ 4">
+                        <option value="ม.4/1">ม.4/1</option>
+                        <option value="ม.4/2">ม.4/2</option>
+                        <option value="ม.4/3">ม.4/3</option>
+                        <option value="ม.4/4">ม.4/4</option>
+                        <option value="ม.4/5">ม.4/5</option>
+                        <option value="ม.4/6">ม.4/6</option>
+                        <option value="ม.4/7">ม.4/7</option>
+                        <option value="ม.4/8">ม.4/8</option>
+                        <option value="ม.4/9">ม.4/9</option>
+                        <option value="ม.4/10">ม.4/10</option>
+                        <option value="ม.4/11">ม.4/11</option>
+                        <option value="ม.4/12">ม.4/12</option>
+                        <option value="ม.4/13">ม.4/13</option>
+                        <option value="ม.4/14">ม.4/14</option>
+                    </optgroup>
+                    <optgroup label="มัธยมศึกษาปีที่ 5">
+                        <option value="ม.5/1">ม.5/1</option>
+                        <option value="ม.5/2">ม.5/2</option>
+                        <option value="ม.5/3">ม.5/3</option>
+                        <option value="ม.5/4">ม.5/4</option>
+                        <option value="ม.5/5">ม.5/5</option>
+                        <option value="ม.5/6">ม.5/6</option>
+                        <option value="ม.5/7">ม.5/7</option>
+                        <option value="ม.5/8">ม.5/8</option>
+                        <option value="ม.5/9">ม.5/9</option>
+                        <option value="ม.5/10">ม.5/10</option>
+                        <option value="ม.5/11">ม.5/11</option>
+                        <option value="ม.5/12">ม.5/12</option>
+                        <option value="ม.5/13">ม.5/13</option>
+                        <option value="ม.5/14">ม.5/14</option>
+                    </optgroup>
+                    <optgroup label="มัธยมศึกษาปีที่ 6">
+                        <option value="ม.6/1">ม.6/1</option>
+                        <option value="ม.6/2">ม.6/2</option>
+                        <option value="ม.6/3">ม.6/3</option>
+                        <option value="ม.6/4">ม.6/4</option>
+                        <option value="ม.6/5">ม.6/5</option>
+                        <option value="ม.6/6">ม.6/6</option>
+                        <option value="ม.6/7">ม.6/7</option>
+                        <option value="ม.6/8">ม.6/8</option>
+                        <option value="ม.6/9">ม.6/9</option>
+                        <option value="ม.6/10">ม.6/10</option>
+                        <option value="ม.6/11">ม.6/11</option>
+                        <option value="ม.6/12">ม.6/12</option>
+                        <option value="ม.6/13">ม.6/13</option>
+                        <option value="ม.6/14">ม.6/14</option>
+                    </optgroup>
+                 </select>
+            </div>
+            <div class="col-4">
+                <label class="form-label" style="font-size: 0.8rem;">ชื่อวิชา</label>
+                <input type="text" class="form-control form-control-sm new-subject" placeholder="ใส่ชื่อวิชา (รหัส) เช่น เคมี1 (ว31221)">
+            </div>
+            <div class="col-1 text-end">
+                <button type="button" class="btn btn-sm btn-outline-danger remove-schedule-row-btn"><i class="fas fa-trash-alt"></i></button>
+            </div>
+        </div>
+    </template>
+
 
     <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
@@ -405,6 +702,7 @@
     <script src="https://cdn.datatables.net/responsive/3.0.2/js/responsive.bootstrap5.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <script src="https://cdn.jsdelivr.net/npm/signature_pad@4.0.0/dist/signature_pad.umd.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
 
     <script>
         // !! IMPORTANT !!
@@ -417,15 +715,15 @@
             
             let signaturePad, datePicker, attendanceDataTable;
             let teacherSessionsData = []; // Store all sessions for the teacher
+            let currentTeacherMasterData = {}; // Store master data
             const canvas = document.getElementById('signature-pad');
             const loadingOverlay = $('#loadingOverlay');
-
+            
             const thaiHolidays = [
-                // 2024
+                // 2024-2025 holidays
                 "2024-01-01", "2024-02-26", "2024-04-08", "2024-04-15", "2024-04-16", "2024-05-01", 
                 "2024-05-06", "2024-05-22", "2024-06-03", "2024-07-22", "2024-07-29", "2024-08-12", 
                 "2024-10-14", "2024-10-23", "2024-12-05", "2024-12-10", "2024-12-31",
-                // 2025
                 "2025-01-01", "2025-02-12", "2025-03-03", "2025-04-07", "2025-04-14", "2025-04-15",
                 "2025-05-01", "2025-05-05", "2025-05-12", "2025-06-03", "2025-07-21", "2025-07-28", 
                 "2025-08-12", "2025-10-13", "2025-10-23", "2025-12-05", "2025-12-10", "2025-12-31"
@@ -465,10 +763,10 @@
                 signaturePad.fromData(signaturePad.toData());
             }
             
-            function initializeApp() {
+           function initializeApp() {
                 datePicker = flatpickr("#checkDate", {
                     locale: "th",
-                    dateFormat: "j M Y",
+                    dateFormat: "j M Y", 
                     defaultDate: "today",
                     disable: [
                         function(date) {
@@ -490,6 +788,10 @@
 
                 $('#dateAndSessionContainer, #teacherInfoContainer, #sessionDetailsContainer, #goToAttendancePage').hide();
                 
+                $('.day-schedule-wrapper').each(function() {
+                    addScheduleRow($(this).find('.add-schedule-row-btn'));
+                });
+
                 addEventListeners();
                 updateSummary();
                 toggleEditMode(true);
@@ -547,7 +849,6 @@
                             $('#teacher-name').val(teacher.teacherName);
                             $('#learning-area').val(teacher.learningArea);
                             
-                            // MODIFIED: Hide input, show data and change button
                             $('#teacherIdContainer').slideUp();
                             $('#changeTeacherBtn').show();
                             $('#teacherInfoContainer').slideDown();
@@ -560,11 +861,7 @@
                     })
                     .catch(error => {
                         hideLoadingOverlay();
-                        Swal.fire({
-                            icon: 'error',
-                            title: 'เกิดข้อผิดพลาด',
-                            text: error.message
-                        });
+                        Swal.fire({ icon: 'error', title: 'เกิดข้อผิดพลาด', text: error.message });
                         $('#teacherIdContainer').slideDown();
                         $('#dateAndSessionContainer, #teacherInfoContainer, #sessionDetailsContainer, #goToAttendancePage').slideUp();
                         $('#changeTeacherBtn').hide();
@@ -587,7 +884,7 @@
                         hideLoadingOverlay();
                         if (result.status === 'success' && result.data.length > 0) {
                             populateStudentTable(result.data);
-                            $('#page1').hide();
+                            $('#mainContainer').hide();
                             $('#page2').show();
                             resizeCanvas();
                             updateStickyHeader();
@@ -598,11 +895,7 @@
                     })
                     .catch(error => {
                         hideLoadingOverlay();
-                        Swal.fire({
-                            icon: 'error',
-                            title: 'เกิดข้อผิดพลาด',
-                            text: `ไม่สามารถโหลดข้อมูลนักเรียนได้: ${error.message}`
-                        });
+                        Swal.fire({ icon: 'error', title: 'เกิดข้อผิดพลาด', text: `ไม่สามารถโหลดข้อมูลนักเรียนได้: ${error.message}` });
                     });
             }
 
@@ -706,6 +999,275 @@
                     if (result.isConfirmed) postDataToServer(attendanceData);
                 });
             }
+            
+            function getTeacherMasterData(teacherId) {
+                showLoadingOverlay();
+                $('#teacherDetailsContainer').slideUp(); 
+
+                fetch(`${WEB_APP_URL}?action=getTeacherMasterData&teacherId=${teacherId}`)
+                .then(res => res.json())
+                .then(result => {
+                    hideLoadingOverlay();
+                    if (result.status === 'success') {
+                        Swal.fire({
+                            icon: 'success',
+                            title: 'พบข้อมูลครู',
+                            text: result.data.teacherName,
+                            timer: 1500,
+                            showConfirmButton: false
+                        });
+
+                        currentTeacherMasterData = result.data;
+                        $('#newTeacherName').val(result.data.teacherName);
+                        $('#newLearningArea').val(result.data.learningArea);
+                        $('#newTeacherPosition').val(result.data.position); 
+                        $('#teacherPhotoPreview').attr('src', result.data.photo || 'https://placehold.co/100x100/EFEFEF/AAAAAA&text=No+Photo');
+                        
+                        $('#teacherDetailsContainer').slideDown();
+
+                    } else {
+                        throw new Error(result.message || 'ไม่พบข้อมูล กรุณาติดต่อ ADMIN');
+                    }
+                })
+                .catch(error => {
+                    hideLoadingOverlay();
+                    Swal.fire({ 
+                        icon: 'error', 
+                        title: 'ไม่พบข้อมูล', 
+                        text: 'กรุณาติดต่อ ADMIN' 
+                    });
+                    $('#newTeacherName, #newLearningArea, #newTeacherPosition').val('');
+                    $('#teacherPhotoPreview').attr('src', 'https://placehold.co/100x100/EFEFEF/AAAAAA&text=Photo');
+                    $('#teacherDetailsContainer').slideUp();
+                });
+            }
+
+            function handleSavePhoto() {
+                const fileInput = document.getElementById('newPhotoUpload');
+                if (fileInput.files.length === 0) {
+                    Swal.fire({ icon: 'warning', title: 'ไม่ได้เลือกไฟล์', text: 'กรุณาเลือกไฟล์รูปภาพที่ต้องการอัปโหลด' });
+                    return;
+                }
+                
+                const file = fileInput.files[0];
+                const reader = new FileReader();
+                reader.readAsDataURL(file);
+                reader.onload = () => {
+                    const base64Data = reader.result;
+                    showLoadingOverlay();
+                    fetch(WEB_APP_URL, {
+                        method: 'POST',
+                        body: JSON.stringify({
+                            action: 'updateTeacherPhoto',
+                            teacherId: $('#newTeacherId').val(),
+                            base64Data: base64Data
+                        }),
+                        headers: { 'Content-Type': 'text/plain;charset=utf-8' }
+                    })
+                    .then(res => res.json())
+                    .then(result => {
+                        hideLoadingOverlay();
+                        if (result.status === 'success') {
+                            Swal.fire({ icon: 'success', title: 'สำเร็จ', text: result.message });
+                            $('#teacherPhotoPreview').attr('src', result.newUrl);
+                             currentTeacherMasterData.photo = result.newUrl;
+                             $('#newPhotoUpload').val(''); 
+                        } else { throw new Error(result.message); }
+                    })
+                    .catch(err => {
+                        hideLoadingOverlay();
+                        Swal.fire({ icon: 'error', title: 'เกิดข้อผิดพลาด', text: err.message });
+                    });
+                };
+            }
+            
+            function handleSaveTeachData() {
+                if (!$('#newTeacherId').val() || !currentTeacherMasterData.teacherId) {
+                    Swal.fire({ 
+                        icon: 'error', 
+                        title: '<i class="fas fa-exclamation-circle me-2"></i>ข้อมูลไม่ครบถ้วน', 
+                        text: 'กรุณากรอกรหัสครูและตรวจสอบข้อมูลให้ถูกต้องก่อน' 
+                    });
+                    return;
+                }
+                
+                const teachData = [];
+                let validationError = false;
+                let errorMessage = 'กรุณากรอกข้อมูลการสอนให้ครบทุกช่องในแถวที่ท่านได้เริ่มกรอกข้อมูล';
+
+                $('.day-schedule-wrapper').each(function() {
+                    const day = $(this).data('day');
+                    $(this).find('.schedule-row').each(function() {
+                        const period = $(this).find('.new-period').val();
+                        const hours = $(this).find('.new-hours').val();
+                        const className = $(this).find('.new-classname').val();
+                        const subjectName = $(this).find('.new-subject').val();
+
+                        const allFields = [period, hours, className, subjectName];
+                        const filledFields = allFields.filter(val => val && val.trim() !== '').length;
+
+                        if (filledFields > 0 && filledFields < 4) {
+                            validationError = true;
+                            $(this).find('input.new-subject').toggleClass('is-invalid', !subjectName.trim());
+                            $(this).find('.new-period').next('.select2-container').toggleClass('is-invalid', !period);
+                            $(this).find('.new-classname').next('.select2-container').toggleClass('is-invalid', !className);
+                        } else if (filledFields === 4) {
+                             $(this).find('.is-invalid').removeClass('is-invalid');
+                            teachData.push({ day, period, hours, className, subjectName });
+                        } else {
+                             $(this).find('.is-invalid').removeClass('is-invalid');
+                        }
+                    });
+                });
+
+                if (validationError) {
+                    Swal.fire({ 
+                        icon: 'warning', 
+                        title: '<i class="fas fa-exclamation-triangle me-2"></i>ข้อมูลไม่สมบูรณ์', 
+                        text: errorMessage 
+                    });
+                    return;
+                }
+
+                if (teachData.length === 0) {
+                    Swal.fire({ 
+                        icon: 'warning', 
+                        title: '<i class="fas fa-info-circle me-2"></i>ไม่มีข้อมูลตารางสอน', 
+                        text: 'กรุณากรอกข้อมูลการสอนอย่างน้อย 1 คาบเพื่อบันทึก' 
+                    });
+                    return;
+                }
+                
+                let confirmationHtml = `
+                    <p class="text-start">โปรดตรวจสอบข้อมูลตารางสอนที่ท่านกรอกก่อนยืนยัน:</p>
+                    <div class="table-responsive" style="max-height: 300px; overflow-y: auto;">
+                        <table class="table table-bordered table-striped">
+                            <thead class="table-primary text-center" style="position: sticky; top: 0;">
+                                <tr>
+                                    <th><i class="fas fa-calendar-day me-1"></i>วัน</th>
+                                    <th><i class="fas fa-clock me-1"></i>คาบที่</th>
+                                    <th><i class="fas fa-hourglass-half me-1"></i>ชม.</th>
+                                    <th><i class="fas fa-chalkboard me-1"></i>ชั้นเรียน</th>
+                                    <th><i class="fas fa-book me-1"></i>ชื่อวิชา</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                `;
+                teachData.forEach(item => {
+                    confirmationHtml += `
+                        <tr>
+                            <td class="text-center">${item.day}</td>
+                            <td class="text-center">${item.period}</td>
+                            <td class="text-center">${item.hours}</td>
+                            <td>${item.className}</td>
+                            <td>${item.subjectName}</td>
+                        </tr>
+                    `;
+                });
+                confirmationHtml += `
+                            </tbody>
+                        </table>
+                    </div>
+                `;
+
+                Swal.fire({
+                    title: '<i class="fas fa-question-circle me-2"></i>ยืนยันการบันทึกข้อมูล?',
+                    html: confirmationHtml,
+                    icon: 'question',
+                    showCancelButton: true,
+                    confirmButtonColor: '#28a745',
+                    cancelButtonColor: '#d33',
+                    confirmButtonText: '<i class="fas fa-check-circle me-1"></i> ยืนยัน',
+                    cancelButtonText: '<i class="fas fa-times-circle me-1"></i> ยกเลิก',
+                    width: '800px'
+                }).then((result) => {
+                    if (result.isConfirmed) {
+                        const postBody = {
+                            action: 'saveTeachData',
+                            teacherInfo: currentTeacherMasterData,
+                            teachData: teachData
+                        };
+
+                        showLoadingOverlay();
+                        fetch(WEB_APP_URL, {
+                            method: 'POST',
+                            body: JSON.stringify(postBody),
+                            headers: { 'Content-Type': 'text/plain;charset=utf-8' }
+                        })
+                        .then(res => res.json())
+                        .then(result => {
+                            hideLoadingOverlay();
+                            if(result.status === 'success') {
+                                Swal.fire({
+                                    icon: 'success', 
+                                    title: '<i class="fas fa-save me-2"></i>สำเร็จ!', 
+                                    text: result.message,
+                                    timer: 2000,
+                                    showConfirmButton: false
+                                }).then(() => {
+                                    const attendanceTab = new bootstrap.Tab(document.getElementById('attendance-tab'));
+                                    attendanceTab.show();
+                                });
+                            } else { throw new Error(result.message); }
+                        })
+                        .catch(err => {
+                            hideLoadingOverlay();
+                            Swal.fire({ 
+                                icon: 'error', 
+                                title: '<i class="fas fa-bomb me-2"></i>เกิดข้อผิดพลาด', 
+                                text: err.message 
+                            });
+                        });
+                    }
+                });
+            }
+            
+            // FIX: Updated function to use Select2
+            function addScheduleRow(button) {
+                const container = $(button).closest('.day-schedule-wrapper').find('.day-schedule-container');
+                const rowCount = container.find('.schedule-row').length;
+                if (rowCount >= 7) {
+                    Swal.fire({icon: 'warning', title: 'จำกัด 7 คาบ', text: 'ไม่สามารถเพิ่มคาบสอนเกิน 7 คาบต่อวันได้'});
+                    return;
+                }
+                
+                const template = document.getElementById('scheduleRowTemplate');
+                const newRow = $(template.content.cloneNode(true));
+                
+                container.append(newRow);
+
+                // Initialize Select2 on the new dropdowns
+                newRow.find('.new-period, .new-classname').each(function() {
+                    $(this).select2({
+                        theme: "bootstrap-5",
+                        width: '100%',
+                        placeholder: $(this).data('placeholder'),
+                        dropdownParent: $(this).parent() // Important for modals or dynamic content
+                    });
+                });
+
+                if (container.find('.schedule-row').length >= 7) {
+                    $(button).prop('disabled', true);
+                }
+            }
+            
+            // FIX: Updated function to use Select2
+            function removeScheduleRow(button) {
+                const row = $(button).closest('.schedule-row');
+                const containerWrapper = row.closest('.day-schedule-wrapper');
+
+                // Destroy Select2 instances before removing the row
+                row.find('.new-period, .new-classname').each(function() {
+                    if ($(this).data('select2')) {
+                        $(this).select2('destroy');
+                    }
+                });
+
+                row.remove();
+                
+                containerWrapper.find('.add-schedule-row-btn').prop('disabled', false);
+            }
+
 
             function postDataToServer(attendanceData) {
                 showLoadingOverlay();
@@ -721,6 +1283,7 @@
                     hours: $('#classHours').val()
                 };
                 const finalData = { 
+                    action: 'saveAttendance',
                     courseInfo: courseInfo, 
                     attendance: attendanceData,
                     teacherSignature: signaturePad.toDataURL('image/png')
@@ -736,14 +1299,9 @@
                     hideLoadingOverlay();
                     if (result.status === 'success') {
                         Swal.fire({ 
-                            icon: 'success', 
-                            title: 'สำเร็จ!', 
-                            text: 'บันทึกข้อมูลเรียบร้อยแล้ว',
-                            timer: 2000,
-                            showConfirmButton: false
-                        }).then(() => {
-                            window.location.reload();
-                        });
+                            icon: 'success', title: 'สำเร็จ!', text: 'บันทึกข้อมูลเรียบร้อยแล้ว',
+                            timer: 2000, showConfirmButton: false
+                        }).then(() => { window.location.reload(); });
                     } else {
                         throw new Error(result.message);
                     }
@@ -755,23 +1313,18 @@
             }
 
             function addEventListeners() {
+                // --- Attendance Tab Listeners ---
                 $('#teacherId').on('input', function() {
                     const teacherId = $(this).val().trim();
-                    if (teacherId.length === 4) {
-                        getTeacherData(teacherId);
-                    } else {
-                        $('#dateAndSessionContainer, #teacherInfoContainer, #sessionDetailsContainer, #goToAttendancePage').slideUp();
-                    }
+                    if (teacherId.length === 4) getTeacherData(teacherId);
                 });
 
                 $('#sessionSelector').on('change', function() {
                     const selectedIndex = $(this).val();
-                    
                     if (selectedIndex === "") {
                         resetSessionDetails();
                         return;
                     }
-                    
                     const currentDay = $('#checkDay').val();
                     const todaysSessions = teacherSessionsData.filter(s => s.day === currentDay);
                     const session = todaysSessions[selectedIndex];
@@ -786,23 +1339,17 @@
                         $('#sessionDetailsContainer').slideDown();
                         $('#goToAttendancePage').show();
                     } else {
-                         resetSessionDetails();
+                        resetSessionDetails();
                     }
                 });
 
-                // MODIFIED: Added event listener for the new button
                 $('#changeTeacherBtn').on('click', function() {
                     $('#dateAndSessionContainer, #teacherInfoContainer, #sessionDetailsContainer, #goToAttendancePage').slideUp();
-                    
                     $('#teacherId').val('');
-                    $('#teacherIdContainer').slideDown(() => {
-                        $('#teacherId').focus();
-                    });
-
+                    $('#teacherIdContainer').slideDown(() => { $('#teacherId').focus(); });
                     $(this).hide();
                     teacherSessionsData = [];
                 });
-
                 $('#goToAttendancePage').on('click', function() {
                     let form = document.getElementById('infoForm');
                     if (form.checkValidity() === false || $('#sessionSelector').val() === "") {
@@ -814,27 +1361,50 @@
                         loadStudents();
                     }
                 });
-                
                 $('#editButton').on('click', () => { 
                     toggleEditMode(true); 
                     Swal.fire({ icon: 'info', title: 'เปิดโหมดแก้ไข', text: 'คุณสามารถแก้ไขข้อมูลได้แล้ว', timer: 1500, showConfirmButton: false });
                 });
-                
                 $('#saveButton').on('click', handleSave);
 
+                // --- Manage Teacher Tab Listeners ---
+                $('#newTeacherId').on('input', function() {
+                    const teacherId = $(this).val().trim();
+                    if (teacherId.length === 4) {
+                        getTeacherMasterData(teacherId);
+                    } else {
+                        $('#teacherDetailsContainer').slideUp(); // Hide if ID is not 4 digits
+                    }
+                });
+                $('#newPhotoUpload').on('change', function(e){
+                     if (e.target.files && e.target.files[0]) {
+                        const reader = new FileReader();
+                        reader.onload = function(event) {
+                            $('#teacherPhotoPreview').attr('src', event.target.result);
+                        }
+                        reader.readAsDataURL(e.target.files[0]);
+                    }
+                });
+                $('#saveTeacherPhotoBtn').on('click', handleSavePhoto);
+                $('#saveTeachDataBtn').on('click', handleSaveTeachData);
+                
+                $('#scheduleContainer').on('click', '.add-schedule-row-btn', function() { addScheduleRow(this); });
+                $('#scheduleContainer').on('click', '.remove-schedule-row-btn', function() { removeScheduleRow(this); });
+
+                // --- Student Table Listeners ---
                 $('#attendanceTable tbody').on('change', 'input.btn-check', function() {
                     const $this = $(this);
                     $(`input.btn-check[name="${$this.attr('name')}"]`).not(this).prop('checked', false);
                     $this.prop('checked', true);
                     updateSummary();
                 });
-                
                 $('#attendanceTable tbody').on('click', '.student-photo', function() {
                     const img_src = $(this).attr('src').replace(/50x50/g, '250x250');
                     const studentName = $(this).closest('tr').find('.student-name').text();
                     Swal.fire({ title: studentName, imageUrl: img_src, imageWidth: 250, imageHeight: 250, confirmButtonText: 'ปิด' });
                 });
 
+                // --- Global Listeners ---
                 $('#setAllPresent').on('click', () => setAllStatuses('มา'));
                 $('#setAllLeave').on('click', () => setAllStatuses('ลา'));
                 $('#setAllAbsent').on('click', () => setAllStatuses('ขาด'));
