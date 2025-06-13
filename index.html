@@ -1023,6 +1023,7 @@
                         $('#newTeacherPosition').val(result.data.position); 
                         $('#teacherPhotoPreview').attr('src', result.data.photo || 'https://placehold.co/100x100/EFEFEF/AAAAAA&text=No+Photo');
                         
+                        $('#newTeacherId').closest('.row.g-3').slideUp(); // Hide the teacher ID input row
                         $('#teacherDetailsContainer').slideDown();
 
                     } else {
