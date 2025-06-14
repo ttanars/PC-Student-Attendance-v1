@@ -72,7 +72,7 @@
         }
 
         /* --- Photo Styling --- */
-        .student-photo {
+        .student-photo, #settingTeacherPhotoPreview {
             width: 45px;
             height: 45px;
             object-fit: cover;
@@ -250,6 +250,9 @@
         .tab-content {
             margin-top: 1.5rem;
         }
+        #settingsForm .form-label i {
+            width: 20px;
+        }
     </style>
 </head>
 <body>
@@ -280,6 +283,11 @@
                 <li class="nav-item" role="presentation">
                     <button class="nav-link" id="manage-tab" data-bs-toggle="tab" data-bs-target="#manage-tab-pane" type="button" role="tab" aria-controls="manage-tab-pane" aria-selected="false">
                         <i class="fas fa-chalkboard-teacher me-2"></i>จัดการข้อมูลครู
+                    </button>
+                </li>
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link" id="settings-tab" data-bs-toggle="tab" data-bs-target="#settings-tab-pane" type="button" role="tab" aria-controls="settings-tab-pane" aria-selected="false">
+                        <i class="fas fa-cogs me-2"></i>ตั้งค่าระบบ
                     </button>
                 </li>
             </ul>
@@ -458,7 +466,90 @@
                             </div>
                         </div> </form>
                 </div>
-            </div> <footer style="text-align: center;background-color:#faff99; padding: 10px 0; margin-top: auto; border-top: 1px solid #e0e0e0; font-size: 0.9em; color: #555; width: 100%;">
+
+                <div class="tab-pane fade" id="settings-tab-pane" role="tabpanel" aria-labelledby="settings-tab" tabindex="0">
+                    <form id="settingsForm" class="p-2" novalidate>
+                        <h5 class="mb-3"><b><i class="fas fa-cogs me-2"></i>ตั้งค่าระบบ</b></h5>
+                        
+                        <div class="row g-3">
+                            <div class="col-12">
+                                <label for="settingUserId" class="form-label"><i class="fas fa-user-shield"></i>รหัสผู้ใช้งานระบบ</label>
+								<input type="tel" class="form-control text-center" id="settingUserId" placeholder="กรอกรหัสผู้ใช้งานที่ได้จาก ADMIN" required maxlength="4">
+                            </div>
+                        </div>
+                        
+                        <div id="settingsFieldsContainer" style="display: none;">
+                            <hr class="my-4">
+                            <h5 class="mb-3"><b><i class="fas fa-database me-2"></i>ตั้งค่า ID และโฟลเดอร์</b></h5>
+                            <div class="row g-3">
+                                <div class="col-md-6">
+                                    <label for="settingAttendanceLogId" class="form-label"><i class="fas fa-book"></i>ไอดีชีต (AttendanceLog)</label>
+                                    <input type="text" class="form-control" id="settingAttendanceLogId" required>
+                                </div>
+                                <div class="col-md-6">
+                                    <label for="settingMasterSheetId" class="form-label"><i class="fas fa-table"></i>ไอดีชีต (Master Data)</label>
+                                    <input type="text" class="form-control" id="settingMasterSheetId" required>
+                                </div>
+                                <div class="col-md-6">
+                                    <label for="settingPhotoFolderId" class="form-label"><i class="fas fa-folder-open"></i>ไอดีโฟลเดอร์ (รูปครู)</label>
+                                    <input type="text" class="form-control" id="settingPhotoFolderId" required>
+                                </div>
+                                <div class="col-md-6">
+                                    <label for="settingSignatureFolderId" class="form-label"><i class="fas fa-folder-open"></i>ไอดีโฟลเดอร์ (ลายเซ็น)</label>
+                                    <input type="text" class="form-control" id="settingSignatureFolderId" required>
+                                </div>
+                            </div>
+
+                            <hr class="my-4">
+                            <h5 class="mb-3"><b><i class="fas fa-user-edit me-2"></i>ข้อมูลส่วนตัว</b></h5>
+                            <div class="row g-3">
+                                <div class="col-md-6">
+                                    <label for="settingTeacherId" class="form-label"><i class="fas fa-id-card"></i>รหัสครูผู้สอน</label>
+                                    <input type="text" class="form-control" id="settingTeacherId" required>
+                                </div>
+                                <div class="col-md-6">
+                                    <label for="settingTeacherName" class="form-label"><i class="fas fa-user"></i>ชื่อ-สกุล</label>
+                                    <input type="text" class="form-control" id="settingTeacherName" required>
+                                </div>
+                                <div class="col-md-6">
+                                    <label for="settingLearningArea" class="form-label"><i class="fas fa-layer-group"></i>กลุ่มสาระฯ</label>
+                                    <input type="text" class="form-control" id="settingLearningArea" required>
+                                </div>
+                                <div class="col-md-6">
+                                    <label for="settingPosition" class="form-label"><i class="fas fa-user-tie"></i>ตำแหน่ง</label>
+                                    <input type="text" class="form-control" id="settingPosition" required>
+                                </div>
+                                 <div class="col-md-6">
+                                    <label for="settingPhone" class="form-label"><i class="fas fa-phone"></i>หมายเลขโทรศัพท์</label>
+                                    <input type="tel" class="form-control" id="settingPhone" required>
+                                </div>
+                                <div class="col-md-6">
+                                    <label for="settingEmail" class="form-label"><i class="fas fa-envelope"></i>อีเมล</label>
+                                    <input type="email" class="form-control" id="settingEmail" required>
+                                </div>
+                            </div>
+                             <div class="row g-3 mt-3 align-items-center">
+                                <div class="col-auto">
+                                    <img id="settingTeacherPhotoPreview" src="https://placehold.co/45x45/EFEFEF/AAAAAA&text=รูป" alt="Photo Preview">
+                                </div>
+                                <div class="col">
+                                    <label for="settingPhotoUpload" class="form-label"><i class="fas fa-camera"></i>อัปโหลดรูปครูผู้สอน</label>
+                                    <input class="form-control" type="file" id="settingPhotoUpload" accept="image/png, image/jpeg">
+                                    <div class="form-text">อัปโหลดไฟล์ใหม่เพื่อเปลี่ยนรูปภาพปัจจุบัน</div>
+                                </div>
+                            </div>
+
+                            <div class="text-center mt-4">
+                                <button type="button" id="saveSettingsBtn" class="btn btn-success btn-lg">
+                                    <i class="fas fa-save me-2"></i>บันทึกการตั้งค่า
+                                </button>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+            </div> 
+            
+            <footer style="text-align: center;background-color:#faff99; padding: 10px 0; margin-top: auto; border-top: 1px solid #e0e0e0; font-size: 0.9em; color: #555; width: 100%;">
                 :: Created and Develop by KT|Tanasarn Sirak ::
                 <div class="container text-center">
                 <a href="https://line.me/ti/p/3F7VGrqgUr" target="_blank"><i class="fa-solid fa-comments"></i></a> <a style="color:red;text-decoration:none;font-size:12px" href="https://line.me/ti/p/3F7VGrqgUr" target="_blank"> สอบถาม/แจ้งปัญหา :: <span style="font-size:12px;color:black">KT | Tanasarn Sirak © <script>document.write(new Date().getFullYear()+543)</script> </a>
@@ -1011,8 +1102,7 @@
                     if (result.status === 'success') {
                         Swal.fire({
                             icon: 'success',
-                            title: 'พบข้อมูลครู',
-                            text: result.data.teacherName,
+                            title: `พบข้อมูลครู: ${result.data.teacherName}`,
                             timer: 1500,
                             showConfirmButton: false
                         });
@@ -1223,7 +1313,6 @@
                 });
             }
             
-            // FIX: Updated function to use Select2
             function addScheduleRow(button) {
                 const container = $(button).closest('.day-schedule-wrapper').find('.day-schedule-container');
                 const rowCount = container.find('.schedule-row').length;
@@ -1252,7 +1341,6 @@
                 }
             }
             
-            // FIX: Updated function to use Select2
             function removeScheduleRow(button) {
                 const row = $(button).closest('.schedule-row');
                 const containerWrapper = row.closest('.day-schedule-wrapper');
@@ -1310,6 +1398,162 @@
                 .catch(error => {
                     hideLoadingOverlay();
                     Swal.fire({ icon: 'error', title: 'เกิดข้อผิดพลาดในการบันทึก', text: error.message });
+                });
+            }
+            
+            // --- NEW: Helper function to clear the settings form ---
+            function resetSettingsForm() {
+                $('#settingsForm').find('input[type="text"], input[type="tel"], input[type="email"]').val('');
+                $('#settingTeacherPhotoPreview').attr('src', 'https://placehold.co/45x45/EFEFEF/AAAAAA&text=รูป');
+                $('#settingPhotoUpload').val('');
+            }
+
+
+            // --- NEW & MODIFIED SETTINGS FUNCTIONS ---
+            
+            /**
+             * Handles loading settings data.
+             * **MODIFIED:** Now handles both existing and new users.
+             */
+            function handleLoadSettings() {
+                const userId = $('#settingUserId').val().trim();
+                if (!userId) {
+                    Swal.fire({icon: 'warning', title: 'กรุณากรอกรหัสผู้ใช้งานระบบ'});
+                    return;
+                }
+                showLoadingOverlay();
+                fetch(`${WEB_APP_URL}?action=getSettings&userId=${userId}`)
+                    .then(res => res.json())
+                    .then(result => {
+                        hideLoadingOverlay();
+                        if (result.status === 'success') {
+                            const data = result.data;
+                            if (data) {
+                                // --- EXISTING USER ---
+                                // Populate form with existing data
+                                $('#settingAttendanceLogId').val(data['ไอดีชีต AttendanceLog']);
+                                $('#settingMasterSheetId').val(data['ไอดีชีต MasterData']);
+                                $('#settingPhotoFolderId').val(data['ไอดีโฟลเดอร์อัพโหลดรูปครู']);
+                                $('#settingSignatureFolderId').val(data['ไอดีโฟลเดอร์อัพโหลดลายเซ็น']);
+                                $('#settingTeacherId').val(data['รหัสครูผู้สอน']);
+                                $('#settingTeacherName').val(data['ชื่อ-สกุล']);
+                                $('#settingLearningArea').val(data['กลุ่มสาระฯ']);
+                                $('#settingPosition').val(data['ตำแหน่ง']);
+                                $('#settingPhone').val(data['หมายเลขโทรศัพท์']);
+                                $('#settingEmail').val(data['อีเมล']);
+                                $('#settingTeacherPhotoPreview').attr('src', data['รูปครูผู้สอน (URL)'] || 'https://placehold.co/45x45/EFEFEF/AAAAAA&text=รูป');
+                                
+                                $('#settingsFieldsContainer').slideDown();
+                                Swal.fire({icon: 'success', title: 'พบข้อมูลผู้ใช้', text: 'โหลดข้อมูลเรียบร้อยแล้ว', timer: 1500, showConfirmButton: false});
+
+                            } else {
+                                // --- NOT FOUND USER ---
+                                $('#settingsFieldsContainer').slideUp();
+                                Swal.fire({
+                                    icon: 'error', 
+                                    title: 'ไม่พบข้อมูลผู้ใช้', 
+                                    text: 'กรุณาติดต่อ ADMIN'
+                                });
+                            }
+                        } else {
+                            // Handle other errors, e.g., script execution error
+                            throw new Error(result.message || 'เกิดข้อผิดพลาดในการดึงข้อมูล');
+                        }
+                    })
+                    .catch(err => {
+                        hideLoadingOverlay();
+                        $('#settingsFieldsContainer').slideUp();
+                        Swal.fire({
+                            icon: 'error', 
+                            title: 'ไม่พบข้อมูลผู้ใช้', 
+                            text: 'กรุณาติดต่อ ADMIN'
+                        });
+                    });
+            }
+
+            function handleSaveSettings() {
+                // Validation
+                const requiredFields = [
+                    '#settingUserId', '#settingAttendanceLogId', '#settingMasterSheetId', '#settingPhotoFolderId',
+                    '#settingSignatureFolderId', '#settingTeacherId', '#settingTeacherName', '#settingLearningArea',
+                    '#settingPosition', '#settingPhone', '#settingEmail'
+                ];
+                for (const fieldId of requiredFields) {
+                    if (!$(fieldId).val().trim()) {
+                        const label = $(`label[for='${fieldId.substring(1)}']`).text();
+                        Swal.fire({icon: 'error', title: 'ข้อมูลไม่ครบถ้วน', text: `กรุณากรอกข้อมูล: ${label}`});
+                        $(fieldId).focus();
+                        return;
+                    }
+                }
+
+                Swal.fire({
+                    title: 'ยืนยันการบันทึกการตั้งค่า?',
+                    text: "ข้อมูลเดิม (หากมี) จะถูกเขียนทับ",
+                    icon: 'warning',
+                    showCancelButton: true,
+                    confirmButtonColor: '#28a745',
+                    cancelButtonColor: '#d33',
+                    confirmButtonText: '<i class="fas fa-check-circle me-1"></i> ยืนยัน',
+                    cancelButtonText: '<i class="fas fa-times-circle me-1"></i> ยกเลิก'
+                }).then((result) => {
+                    if (result.isConfirmed) {
+                        const fileInput = document.getElementById('settingPhotoUpload');
+                        if (fileInput.files.length > 0) {
+                             const reader = new FileReader();
+                             reader.readAsDataURL(fileInput.files[0]);
+                             reader.onload = () => {
+                                 postSettingsData(reader.result);
+                             };
+                        } else {
+                             postSettingsData(null); // No new photo
+                        }
+                    }
+                });
+            }
+
+            function postSettingsData(photoBase64) {
+                 const settingsData = {
+                    attendanceLogId: $('#settingAttendanceLogId').val(),
+                    masterSheetId: $('#settingMasterSheetId').val(),
+                    photoFolderId: $('#settingPhotoFolderId').val(),
+                    signatureFolderId: $('#settingSignatureFolderId').val(),
+                    teacherId: $('#settingTeacherId').val(),
+                    teacherName: $('#settingTeacherName').val(),
+                    learningArea: $('#settingLearningArea').val(),
+                    position: $('#settingPosition').val(),
+                    phone: $('#settingPhone').val(),
+                    email: $('#settingEmail').val(),
+                    teacherPhotoUrl: $('#settingTeacherPhotoPreview').attr('src') // Send current URL
+                };
+
+                const postBody = {
+                    action: 'saveSettings',
+                    userId: $('#settingUserId').val(),
+                    settings: settingsData,
+                    photoBase64: photoBase64
+                };
+
+                showLoadingOverlay();
+                fetch(WEB_APP_URL, {
+                    method: 'POST',
+                    body: JSON.stringify(postBody),
+                    headers: { 'Content-Type': 'text/plain;charset=utf-8' }
+                })
+                .then(res => res.json())
+                .then(result => {
+                    hideLoadingOverlay();
+                    if (result.status === 'success') {
+                         Swal.fire({ icon: 'success', title: 'สำเร็จ!', text: result.message });
+                         if (result.newPhotoUrl) {
+                            $('#settingTeacherPhotoPreview').attr('src', result.newPhotoUrl);
+                         }
+                         $('#settingPhotoUpload').val(''); // Clear file input
+                    } else { throw new Error(result.message); }
+                })
+                .catch(err => {
+                    hideLoadingOverlay();
+                    Swal.fire({ icon: 'error', title: 'เกิดข้อผิดพลาด', text: err.message });
                 });
             }
 
@@ -1403,6 +1647,24 @@
                     const img_src = $(this).attr('src').replace(/50x50/g, '250x250');
                     const studentName = $(this).closest('tr').find('.student-name').text();
                     Swal.fire({ title: studentName, imageUrl: img_src, imageWidth: 250, imageHeight: 250, confirmButtonText: 'ปิด' });
+                });
+
+                // --- Settings Tab Listeners ---
+                // **MODIFIED:** The event trigger is now 'input' for automatic search.
+                $('#settingUserId').on('input', function() {
+                    if ($(this).val().trim().length === 4) {
+                        handleLoadSettings();
+                    }
+                });
+                $('#saveSettingsBtn').on('click', handleSaveSettings);
+                 $('#settingPhotoUpload').on('change', function(e){
+                     if (e.target.files && e.target.files[0]) {
+                        const reader = new FileReader();
+                        reader.onload = function(event) {
+                            $('#settingTeacherPhotoPreview').attr('src', event.target.result);
+                        }
+                        reader.readAsDataURL(e.target.files[0]);
+                    }
                 });
 
                 // --- Global Listeners ---
